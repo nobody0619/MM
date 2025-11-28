@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>纪老师 数学 精英训练网</title>
+  <title>纪老师 MM 精英训练网</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; max-width:900px; margin:auto; text-align:center; }
@@ -21,11 +21,16 @@
     #chapters h2 { margin:10px 0 6px; }
     .group { text-align:left; margin:18px 0; }
     .group-title { font-weight:bold; font-size:18px; margin:8px 0; }
-    .item { display:flex; justify-content:space-between; align-items:center; gap:12px;
-            border:1px solid #e6e6e6; border-radius:12px; padding:10px 14px; margin:8px 0; background:#fff; }
+    .item {
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+      border:1px solid #e6e6e6; border-radius:12px; padding:10px 14px; margin:8px 0; background:#fff;
+    }
     .item .title { text-align:left; }
     .meta { color:#666; font-size:12px; margin-top:4px; }
-    .go { padding:8px 12px; border-radius:10px; border:1px solid #333; background:#000; color:#fff; cursor:pointer; }
+    .go {
+      padding:8px 12px; border-radius:10px; border:1px solid #333;
+      background:#000; color:#fff; cursor:pointer;
+    }
 
     /* 测验区 */
     #topbar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
@@ -38,6 +43,7 @@
     input[type="text"] { width:100%; padding:6px; margin:6px 0; }
     input[type="radio"],input[type="checkbox"] { transform:scale(1.2); margin-right:8px; }
     img { max-width:100%; margin:10px 0; border:2px solid #ccc; }
+    #submit-status { margin-top:10px; font-size:14px; }
   </style>
 </head>
 <body>
@@ -52,7 +58,7 @@
   <!-- 2) 章节页 -->
   <div id="chapters">
     <div class="floating-back">
-      <button type="button" onclick="/* root no-op */">🏠 回到章节选择</button>
+      <button type="button">🏠 回到章节选择</button>
     </div>
     <h2>请选择章节 / Select Chapter</h2>
     <div id="chapterWrap"></div>
@@ -81,31 +87,33 @@
     </div>
     <h3 id="finish-msg"></h3>
     <p id="stats"></p>
+    <p id="submit-status"></p>
     <div id="controls"></div>
   </div>
 
-  <!-- 成绩上传（可删） -->
+  <!-- 成绩上传：隐藏表单（用来兜底提交） -->
   <iframe name="postFrame" style="display:none;"></iframe>
   <form id="postForm"
         action="https://script.google.com/macros/s/AKfycbwOadAK74XfAiOFkokD6zlQ8kQZTFDI0_SVWwMSSRgT8mwuoCac2VSAIj8X07L7NVVF/exec"
         method="post" target="postFrame" style="display:none;">
+    <input name="book"/>
     <input name="quizId"/><input name="name"/><input name="score"/>
     <input name="correct"/><input name="wrong"/><input name="time"/>
   </form>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // 欢迎页标题 = 网页 title
   document.getElementById('welcomeTitle').textContent = document.title;
 
   let user = '';
   let rows = [];
   let chapterKey, labelKey, sheetKey;
 
-  // 按“首次出现顺序”的分组映射（key 顺序 = CSV 出现顺序；OTHERS 始终放最后）
-  let groups = new Map();                 // key: number | 'OTHERS' => array<row>
-  let groupOrder = [];                    // 记录首次出现的 key 顺序（不含 OTHERS）
+  // 分组：Chp/Bab 号 -> rows；OTHERS 放最后
+  let groups = new Map();
+  let groupOrder = [];
 
-  // 当前选择
   let currentRow = null;
 
   // 测验状态
@@ -113,10 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let chapterStart = 0;
   const MAX_OPTS = 15;
 
-  // 题数缓存
-  const countCache = new Map();           // sheetUrl -> number
+  const countCache = new Map();                // sheetUrl -> 题数缓存
+  const SCRIPT_URL = document.getElementById('postForm').action;
 
-  // 开始
+  // 开始按钮
   document.getElementById('startBtn').onclick = () => {
     const nm = document.getElementById('username').value.trim();
     if (!nm) return alert('请输入姓名');
@@ -130,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showChapterList();
   };
 
-  // 读取 Chapters.csv
+  // 载入 Chapters.csv
   function loadChapters() {
     Papa.parse('Chapters.csv', {
       download:true, header:true, skipEmptyLines:true,
@@ -145,9 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
         chapterKey = keys.find(k=>k.toLowerCase()==='chapter');
         labelKey   = keys.find(k=>k.toLowerCase()==='label');
         sheetKey   = keys.find(k=>k.toLowerCase()==='sheet');
-        if (!chapterKey || !labelKey || !sheetKey) {
+        if (!chapterKey || !labelKey || !sheetKey)
           return alert('Chapters.csv 需要列: chapter, label, sheet');
-        }
 
         buildGroupsByCsvOrder(rows);
         showChapterList();
@@ -155,39 +162,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 只取字符串里“第一个” Chp/Bab 的整数（允许 0），后续数字忽略
+  // 提取第一个 Chp/Bab 的数字（允许 0），否则返回 null
   function getMainChapterNo(chapterStr){
     if (!chapterStr) return null;
     const m = String(chapterStr).match(/(?:^|\s)(?:Chp|Bab)\s*([0-9]+)/i);
     return m ? parseInt(m[1],10) : null;
   }
 
-  // 按 CSV 顺序建组：首次出现的 Chp/Bab 顺序即组顺序；无编号→ OTHERS，固定放最后
+  // 按 CSV 顺序建组；无编号为 OTHERS
   function buildGroupsByCsvOrder(list){
     groups = new Map();
     groupOrder = [];
     const OTHERS = 'OTHERS';
 
     for (const r of list){
-      const no = getMainChapterNo(r[chapterKey]);     // number | null
+      const no = getMainChapterNo(r[chapterKey]);
       const key = (no === null ? OTHERS : no);
 
       if (!groups.has(key)) {
         groups.set(key, []);
-        // 仅记录有编号的组的顺序；OTHERS 不记录，最后再补
         if (key !== OTHERS) groupOrder.push(key);
       }
-      groups.get(key).push(r);                         // 组内保持 CSV 原顺序
+      groups.get(key).push(r);
     }
 
-    // 生成按“首次出现顺序”的有序 Map；OTHERS 始终放最后（若存在）
     const ordered = new Map();
     for (const k of groupOrder) ordered.set(k, groups.get(k));
     if (groups.has(OTHERS)) ordered.set(OTHERS, groups.get(OTHERS));
     groups = ordered;
   }
 
-  // 渲染章节页
+  // 渲染章节列表
   function showChapterList(){
     document.getElementById('quiz').style.display = 'none';
     document.getElementById('finish').style.display = 'none';
@@ -240,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('chapters').style.display = 'block';
   }
 
-  // 进入测验
+  // 进入某一章开始测验
   function startQuiz(row){
     currentRow = row;
     document.getElementById('chapters').style.display = 'none';
@@ -258,11 +263,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('quiz').style.display = 'block';
         updateUI(0);
         nextQ();
+      },
+      error(){
+        alert('这个章节的题目加载失败了，请检查表格链接。');
+        showChapterList();
       }
     });
   }
 
-  // UI 状态
+  // 更新顶部 UI
   function updateUI(delta){
     document.getElementById('score').textContent =
       `得分: ${score} ${delta ? '(' + (delta>0?'+':'') + delta + ')' : ''}`;
@@ -271,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pg.max = qs.length; pg.value = qs.length - queue.length;
   }
 
-  // 出题
+  // 出下一题
   function nextQ(){
     const qa = document.getElementById('question-area');
     qa.innerHTML = ''; updateUI(0);
@@ -319,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (!ua.length) return alert('请选择或输入答案');
 
-      // 2) 判分逻辑（text / checkbox / radio）
+      // 2) 判分逻辑
       let isC=false;
       if (q.type==='text'){
         const lows = ua.map(s=>s.toLowerCase());
@@ -330,7 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
         isC = lows.some(v=>ansList.includes(v));
 
       } else if (q.type === 'checkbox') {
-        // 复选题：集合必须完全一致
         const uaA = ua.map(s=>s.toUpperCase()).sort().join(',');
         const caA = String(q.answer||'')
                       .split(',')
@@ -340,8 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       .join(',');
         isC = uaA === caA;
 
-      } else { // q.type === 'radio'
-        // 单选题：答案可写多个（以逗号分隔），任意一个命中即正确
+      } else { // radio：允许多个正确答案，任一命中即可
         const accept = String(q.answer||'')
                          .split(',')
                          .map(s=>s.trim().toUpperCase())
@@ -349,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isC = ua.length === 1 && accept.includes(ua[0].toUpperCase());
       }
 
-      // 统一准备“正确答案”展示（逐行、不显示 A/B/C/D）
+      // 统一生成正确答案 HTML（逐行，不显示 A/B/C/D）
       const allAnsHtml = (() => {
         if (q.type === 'text') {
           return String(q.answer||'')
@@ -359,7 +366,6 @@ document.addEventListener('DOMContentLoaded', () => {
                    .map((s,i)=>`${i+1}. ${s}`)
                    .join('<br>');
         }
-        // radio/checkbox: 映射到选项文本
         return String(q.answer||'')
                  .split(',')
                  .map(s=>s.trim().toUpperCase())
@@ -368,25 +374,24 @@ document.addEventListener('DOMContentLoaded', () => {
                  .join('<br>');
       })();
 
-      // 3) 计分与统计
+      // 3) 计分
       const delta = isC ? (q.attempt?1:2) : (q.attempt?-2:-1);
       score += delta; if (isC) correct++; else wrong++;
 
       const explainLine = q.explain
         ? `<br><span style="font-weight:normal">${String(q.explain)}</span>` : '';
 
-      // 4) 反馈（答对 & 答错都显示正确答案）
+      // 4) 反馈：答对 / 答错都显示正确答案
       fb.innerHTML = isC
         ? `正确! +${delta}<br>正确答案：<br>${allAnsHtml}${explainLine}`
         : `错误! ${delta}<br>正确答案：<br>${allAnsHtml}${explainLine}`;
 
-      // 5) 刷新状态、锁按钮、下一题
       updateUI(delta);
       sb.disabled = true;
       const nb = document.createElement('button'); nb.textContent = '下一题'; nb.onclick = nextQ;
       div.appendChild(nb);
 
-      // 6) 错题回推
+      // 5) 错题回推
       if (!isC){
         q.attempt++;
         for (let i=0;i<2;i++){
@@ -395,23 +400,56 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
     div.appendChild(sb);
-    qa.appendChild(div);
+
+    document.getElementById('question-area').appendChild(div);
   }
 
-  // 完成
-  function finishQuiz(){
+  // 交卷 & 上传成绩
+  async function finishQuiz(){
     document.getElementById('quiz').style.display='none';
     document.getElementById('finish').style.display='block';
     document.getElementById('finish-msg').textContent = `恭喜 ${user}，你学会这个章节了！`;
-    document.getElementById('stats').textContent = `得分: ${score}，答对 ${correct} 题，答错 ${wrong} 题`;
+    document.getElementById('stats').textContent =
+      `得分: ${score}，答对 ${correct} 题，答错 ${wrong} 题`;
+    document.getElementById('submit-status').textContent = '正在上传成绩…';
 
-    // 上传成绩（如不需要可注释）
-    const form=document.getElementById('postForm');
-    form.quizId.value=currentRow[chapterKey];
-    form.name.value=user; form.score.value=score;
-    form.correct.value=correct; form.wrong.value=wrong;
-    form.time.value=Math.floor((Date.now()-chapterStart)/1000);
-    form.submit();
+    // 从 title 抓 F? SC / F? ACC 作为 book
+    const m = document.title.match(/(F\d+\s+(?:SC|ACC))/i);
+    const book = m ? m[1].toUpperCase() : 'DEFAULT';
+
+    const payload = {
+      book: book,
+      quizId: currentRow[chapterKey],
+      name: user,
+      score: score,
+      correct: correct,
+      wrong: wrong,
+      time: Math.floor((Date.now()-chapterStart)/1000)
+    };
+
+    try {
+      // 1) 先用 fetch 正式发一次
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: new URLSearchParams(payload)
+      });
+      if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+      document.getElementById('submit-status').textContent = '✅ 成绩已上传';
+    } catch (e) {
+      // 2) 失败时用隐藏 form 兜底提交一次
+      const form = document.getElementById('postForm');
+      form.book.value    = payload.book;
+      form.quizId.value  = payload.quizId;
+      form.name.value    = payload.name;
+      form.score.value   = payload.score;
+      form.correct.value = payload.correct;
+      form.wrong.value   = payload.wrong;
+      form.time.value    = payload.time;
+      form.submit();
+      document.getElementById('submit-status').textContent =
+        '⚠️ 成绩可能没有上传成功，请老师检查表格链接/权限';
+      console.error('Score upload failed:', e);
+    }
 
     const ctrl=document.getElementById('controls'); ctrl.innerHTML='';
     const back=document.createElement('button');
