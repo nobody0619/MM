@@ -1,0 +1,6 @@
+﻿title,type,question,A,B,C,D,E,F,G,H,I,answer,image
+Prime Number,checkbox,1-10的质数是,1,2,3,4,5,6,7,8,9,"B,C,E,G",
+,checkbox,11-20的质数是,11,13,15,17,19,,,,,"A,B,D,E",
+,checkbox,21-30的质数是,21,23,25,27,29,,,,,"B,E",
+,checkbox,31-40的质数是,31,33,35,37,39,,,,,"A,D",
+,checkbox,41-50的质数是,41,43,45,47,49,,,,,"A,B,D",
