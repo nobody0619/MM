@@ -1,0 +1,9 @@
+﻿title,type,question,A,B,C,answer,image
+保险种类,radio,Death / Kematian ??,Life insurance / Insurans hayat,General insurance/ Insurans am,,A,
+,radio,Loss of ability / Hilang upaya ??,Life insurance / Insurans hayat,General insurance/ Insurans am,,A,
+,radio,Critical illness / Penyakit kritikal ??,Life insurance / Insurans hayat,General insurance/ Insurans am,,A,
+,radio,Motor insurance / Insurans motor ??,Life insurance / Insurans hayat,General insurance/ Insurans am,,B,
+,radio,Medical and health insurance / Insurans perubatan dan kesihatan ??,Life insurance / Insurans hayat,General insurance/ Insurans am,,B,
+,radio,Fire insurance / Insurans kebakaran ??,Life insurance / Insurans hayat,General insurance/ Insurans am,,B,
+,radio,Personal accident insurance / Insurans kemalangan diri ??,Life insurance / Insurans hayat,General insurance/ Insurans am,,B,
+,radio,Travel insurance / Insurans perjalanan ??,Life insurance / Insurans hayat,General insurance/ Insurans am,,B,

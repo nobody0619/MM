@@ -1,0 +1,5 @@
+﻿title,type,question,A,B,C,D,E,F,G,H,I,answer,image
+Medical Insurance - Co-insurance,radio,"医药费RM200 000, co-insurance 70/30
+保险公司出多少医药费？",200 000 - Deductible,( 200 000 x 70% ) - Deductible,( 200 000 - Deductible ) x 70%,,,,,,,C,
+,radio,"医药费RM200 000, co-insurance 70/30
+自己出多少医药费？",200 000 + Deductible,( 200 000 x 30% ) - Deductible + Deductible,( 200 000 - Deductible ) x 30% + Deductible,,,,,,,C,

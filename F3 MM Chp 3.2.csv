@@ -1,0 +1,9 @@
+﻿title,type,question,A,B,C,D,E,F,answer,image
+车险,checkbox,Comprehensive / Komprehensif 有保什么？,自己的车维修费,他人的车维修费,自己的医药费,他人的医药费,自己的车被偷/烧,,"A,B,D,E",
+,radio,Third party / pihak ketiga 有保什么？,自己的车维修费,他人的车维修费,自己的医药费,他人的医药费,自己的车被偷/烧,,"B,D",
+,radio,"Third party, fire & theft / Pihak ketiga, kebakaran & kecurian 有保什么？",自己的车维修费,他人的车维修费,自己的医药费,他人的医药费,自己的车被偷/烧,,"B,D,E",
+,text,"Third party, fire & theft /Pihak ketiga, kebakaran & kecurian 是 Comprehensive / Komprehensif 的保费的多少%? (不用写%)",,,,,,,75,
+,text,Penisular Malaysia / Semenanjung Malaysia 的汽车保险每多RM1000需要给多少保费？(不用写RM),,,,,,,26,
+,text,Sabah & Sarawak 的汽车保险每多RM1000需要给多少保费？(不用写RM),,,,,,,"20.30,20.3",
+,radio,扣完NCD之后的保费叫,Gross premium / Premium kasar,Basic premium / Premium asas,Net premium / Premium bersih,,,,A,
+,radio,拿车的CC与价钱算出来的保费叫,Gross premium / Premium kasar,Basic premium / Premium asas,Net premium / Premium bersih,,,,B,

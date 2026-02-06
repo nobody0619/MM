@@ -1,0 +1,17 @@
+﻿title,type,question,A,B,C,D,E,F,G,H,I,answer,image
+Fire Insurance - Co-insurance,radio,"Fire Insurance 里 Co-insurance
+假设价值RM1 000 000 的房子，保险公司要购买求70%，现如今损失RM400 000
+如果他根据保险公司的要求买保险，请问保险公司赔偿怎么算？
+[ (投保/要求) x 损失 ] - Deductible",400 000 - Deductible,700 000 - Deductible,1 000 000 - Deductible,[ ( 400 000 / 700 000 ) x 400 000 ] - Deductible,[ ( 400 000 / 1 000 000 ) x 400 000 ] - Deductible,[ ( 700 000 / 700 000 ) x 400 000 ] - Deductible,[ ( 400 000 / 700 000 ) - Deductible ] x 400 000,[ ( 400 000 / 1 000 000 ) - Deductible ] x 400 000,[ ( 700 000 / 700 000 ) - Deductible ] x 400 000,"A,F",
+,radio,"Fire Insurance 里 Co-insurance
+假设价值RM1 000 000 的房子，保险公司要购买求70%，现如今损失RM400 000
+如果他只投保RM500 000，请问保险公司赔偿怎么算？
+[ (投保/要求) x 损失 ] - Deductible",400 000 - Deductible,700 000 - Deductible,500 000 - Deductible,[ ( 400 000 / 500 000 ) x 400 000 ] - Deductible,[ ( 500 000 / 700 000 ) x 400 000 ] - Deductible,[ ( 400 000 / 700 000 ) x 400 000 ] - Deductible,[ ( 400 000 / 500 000 ) - Deductible ] x 400 000,[ ( 500 000 / 700 000 ) - Deductible ] x 400 000,[ ( 400 000 / 700 000 ) - Deductible ] x 400 000,E,
+,radio,"Fire Insurance 里 Co-insurance
+假设价值RM2 000 000 的房子，保险公司要购买求60%，现如今损失RM500 000
+如果他只投保RM800 000，请问保险公司赔偿怎么算？
+[ (投保/要求) x 损失 ] - Deductible",500 000 - Deductible,800 000 - Deductible,1 200 000 - Deductible,[ ( 500 000 / 800 000 ) x 500 000 ] - Deductible,[ ( 500 000 / 1 200 000 ) x 500 000 ] - Deductible,[ ( 800 000 / 1 200 000 ) x 500 000 ] - Deductible,[ ( 500 000 / 800 000 ) - Deductible ] x 500 000,[ ( 500 000 / 1 200 000 ) - Deductible ] x 500 000,[ ( 800 000 / 1 200 000 ) - Deductible ] x 500 000,F,
+,radio,"Fire Insurance 里 Co-insurance
+假设价值RM2 000 000 的房子，保险公司要购买求60%，现如今Total Loss
+如果他只投保RM800 000，请问保险公司赔偿怎么算？
+[ (投保/要求) x 损失 ] - Deductible",2 000 000 - Deductible,800 000 - Deductible,1 200 000 - Deductible,[ ( 800 000 / 1 200 000 ) x 1 200 000 ] - Deductible,[ ( 800 000 / 1 200 000 ) x 2 000 000 ] - Deductible,,,,,"B,D",
