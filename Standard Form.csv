@@ -16,6 +16,7 @@ Convert Number,radio,"Convert 1.23 x 10^-4 to a single number. / Tukarkan 1.23 x
 Convert Number,radio,"Convert 9.8 x 10^1 to a single number. / Tukarkan 9.8 x 10^1 kepada nombor tunggal.",98,980,9.8,0.98,A,
 Convert Number,radio,"Convert 4.05 x 10^-2 to a single number. / Tukarkan 4.05 x 10^-2 kepada nombor tunggal.",0.405,0.0405,0.00405,405,B,
 Convert Number,radio,"Convert 5 x 10^6 to a single number. / Tukarkan 5 x 10^6 kepada nombor tunggal.",500000,5000000,50000000,50000,B,
-Convert Number,radio,"Convert 8.1 x 10^0 to a single number. / Tukarkan 8.1 x 10^0 kepada nombor tunggal.",8.1,81,0.81,1,A,
+Convert Number,radio,"Convert 8.1 x 10^0 to a single number. / Tukarkan 8.1 x 10^0 kepada nombor tunggal.",8.1,81,0.81,0.081,A,
 Convert Number,radio,"Convert 2.22 x 10^-5 to a single number. / Tukarkan 2.22 x 10^-5 kepada nombor tunggal.",0.000222,0.0000222,0.00000222,222000,B,
+
 Convert Number,radio,"Convert 3.01 x 10^3 to a single number. / Tukarkan 3.01 x 10^3 kepada nombor tunggal.",301,3010,30010,30100,B,
