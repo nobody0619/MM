@@ -38,5 +38,6 @@ Round Off,text,Round 0.7891 to 3 significant figures.,,0.789,
 Round Off,text,Round 8604 to 2 significant figures.,,8600,
 Round Off,text,Round 45009 to 3 significant figures.,,45000,
 Round Off,text,Round 73.66 to 3 significant figures.,,73.7,
-Round Off,text,Round 5.044 to 2 significant figures.,,5,
+Round Off,text,Round 5.044 to 2 significant figures.,,5.0,
+
 
