@@ -1,0 +1,12 @@
+﻿title,type,question,A,B,C,D,answer,image
+Inequalities,radio,More than or equal to / Lebih daripada atau sama dengan,＞,≥,＜,≤,B,
+,radio,Not less than / Tidak kurang daripada,＞,≥,＜,≤,B,
+,radio,At least / Sekurang-kurangnya,＞,≥,＜,≤,B,
+,radio,Minimum,＞,≥,＜,≤,B,
+,radio,More than / Lebih daripada,＞,≥,＜,≤,A,
+,radio,Greater than / Lebih besar daripada,＞,≥,＜,≤,A,
+,radio,Less than or equal to / Kurang daripada atau sama dengan,＞,≥,＜,≤,D,
+,radio,Not more than / Tidak lebih daripada,＞,≥,＜,≤,D,
+,radio,At most / Selebih-lebihnya,＞,≥,＜,≤,D,
+,radio,Maximum / Maksimum,＞,≥,＜,≤,D,
+,radio,Less than / Kurang daripada,＞,≥,＜,≤,C,
