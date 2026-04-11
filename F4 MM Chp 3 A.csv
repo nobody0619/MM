@@ -1,0 +1,5 @@
+﻿title,type,question,A,B,C,D,answer,image
+Logical Reasoning,radio,哪个是 Statement / Pernyataan ?,"If p, then q. / Jika p, maka q.","If q, then p. / Jika q, maka p.","If ~p, then ~q. / Jika ~p, maka ~q.","If ~q, then ~p. / Jika ~q, maka ~p.",A,
+,radio,哪个是 Converse / Akas ?,"If p, then q. / Jika p, maka q.","If q, then p. / Jika q, maka p.","If ~p, then ~q. / Jika ~p, maka ~q.","If ~q, then ~p. / Jika ~q, maka ~p.",B,
+,radio,哪个是 Inverse / Songsangan ?,"If p, then q. / Jika p, maka q.","If q, then p. / Jika q, maka p.","If ~p, then ~q. / Jika ~p, maka ~q.","If ~q, then ~p. / Jika ~q, maka ~p.",C,
+,radio,哪个是 Contrapositive / Kontrapositif ?,"If p, then q. / Jika p, maka q.","If q, then p. / Jika q, maka p.","If ~p, then ~q. / Jika ~p, maka ~q.","If ~q, then ~p. / Jika ~q, maka ~p.",D,
