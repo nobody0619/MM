@@ -1,0 +1,15 @@
+﻿title,type,question,A,B,C,D,E,F,G,answer,image
+saving vs investment,checkbox,哪些是 Saving / Simpanan ?,Savings Account / Akaun Simpanan,Fixed Deposit Account / Akaun Simpanan Tetap,Current Account / Akaun Semasa,Shares / Saham,Unit Trust / Amanah Saham,Real Estate / Hartanah,,"A,B,C",
+,checkbox,哪些是 Investment / Pelaburan ?,Savings Account / Akaun Simpanan,Fixed Deposit Account / Akaun Simpanan Tetap,Current Account / Akaun Semasa,Shares / Saham,Unit Trust / Amanah Saham,Real Estate / Hartanah,,"D,E,F",
+,radio,"Account holders can withdraw savings at any time
+Pemegang akaun boleh mengeluarkan wang simpanan pada bila-bila masa",Savings Account / Akaun Simpanan,Fixed Deposit Account / Akaun Simpanan Tetap,Current Account / Akaun Semasa,Shares / Saham,Unit Trust / Amanah Saham,Real Estate / Hartanah,,A,
+,radio,"Savings cannot be withdrawn until maturity
+Wang simpanan tidak boleh dikeluarkan sehingga tempoh matang",Savings Account / Akaun Simpanan,Fixed Deposit Account / Akaun Simpanan Tetap,Current Account / Akaun Semasa,Shares / Saham,Unit Trust / Amanah Saham,Real Estate / Hartanah,,B,
+,radio,"Account holders can make payments to other parties via cheques
+Pemegang akaun boleh melakukan pembayaran kepada pihak lain melalui cek",Savings Account / Akaun Simpanan,Fixed Deposit Account / Akaun Simpanan Tetap,Current Account / Akaun Semasa,Shares / Saham,Unit Trust / Amanah Saham,Real Estate / Hartanah,,C,
+,radio,"Shareholders will receive returns in the form of dividends and capital gains 
+Pemegang saham akan menerima pulangan dalam bentuk dividen dan keuntungan modal",Savings Account / Akaun Simpanan,Fixed Deposit Account / Akaun Simpanan Tetap,Current Account / Akaun Semasa,Shares / Saham,Unit Trust / Amanah Saham,Real Estate / Hartanah,,D,
+,radio,"Unit trust companies collect money from investors and the money is invested in various potential companies with the aim of providing profitable returns to investors
+Syarikat unit amanah mengumpulkan wang daripada para pelabur dan wang itu dilaburkan dalam pelbagai syarikat yang berpotensi dengan tujuan memberikan pulangan yang menguntungkan para pelabur",Savings Account / Akaun Simpanan,Fixed Deposit Account / Akaun Simpanan Tetap,Current Account / Akaun Semasa,Shares / Saham,Unit Trust / Amanah Saham,Real Estate / Hartanah,,E,
+,radio,"Investment in immovable assets such as residential houses, shops, land, etc
+Pelaburan atas aset tidak alih seperti rumah kediaman, kedai, tanah dan sebagainya",Savings Account / Akaun Simpanan,Fixed Deposit Account / Akaun Simpanan Tetap,Current Account / Akaun Semasa,Shares / Saham,Unit Trust / Amanah Saham,Real Estate / Hartanah,,F,

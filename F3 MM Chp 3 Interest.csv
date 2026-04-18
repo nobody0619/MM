@@ -1,0 +1,85 @@
+﻿title,type,question,A,B,C,D,E,answer,image
+单利复利,radio,"Ali invests RM4000 at a rate of 3% per annum for 3 years and earns RM360 interest.
+Which is P?
+Ali melabur RM4000 pada kadar 3% setahun selama 3 tahun dan memperoleh RM360 faedah.
+Yang manakah P?",4000,0.03,3,360,4360,A,
+,radio,"Siti saves RM2500 at 5% per annum for 4 years and gets RM500 interest.
+Which is P?
+Siti menyimpan RM2500 pada kadar 5% setahun selama 4 tahun dan mendapat RM500 faedah.
+Yang manakah P?",2500,0.05,4,500,3000,A,
+,radio,"Ali invests RM4000 at a rate of 3% per annum for 3 years and earns RM360 interest.
+Which is r?
+Ali melabur RM4000 pada kadar 3% setahun selama 3 tahun dan memperoleh RM360 faedah.
+Yang manakah r?",4000,0.03,3,360,4360,B,
+,radio,"Kumar saves RM2000 at 4% per annum for 2 years and earns RM160 interest.
+Which is r?
+Kumar menyimpan RM2000 pada kadar 4% setahun selama 2 tahun dan memperoleh RM160 faedah.
+Yang manakah r?",2000,0.04,2,160,2160,B,
+,radio,"Ali invests RM4000 at a rate of 3% per annum for 3 years and earns RM360 interest.
+Which is t?
+Ali melabur RM4000 pada kadar 3% setahun selama 3 tahun dan memperoleh RM360 faedah.
+Yang manakah t?",4000,0.03,3,360,4360,C,
+,radio,"Mei Ling saves RM1500 at 6% per annum for 2 years and earns RM180 interest.
+Which is t?
+Mei Ling menyimpan RM1500 pada kadar 6% setahun selama 2 tahun dan memperoleh RM180 faedah.
+Yang manakah t?",1500,0.06,2,180,1680,C,
+,radio,"Ali invests RM4000 at a rate of 3% per annum for 3 years and earns RM360 interest.
+Which is I?
+Ali melabur RM4000 pada kadar 3% setahun selama 3 tahun dan memperoleh RM360 faedah.
+Yang manakah I?",4000,0.03,3,360,4360,D,
+,radio,"Siti saves RM2500 at 5% per annum for 4 years and gets RM500 interest.
+Which is I?
+Siti menyimpan RM2500 pada kadar 5% setahun selama 4 tahun dan mendapat RM500 faedah.
+Yang manakah I?",2500,0.05,4,500,3000,D,
+,radio,"Aina deposits RM5000 at 4% per annum compounded quarterly for 5 years and gets RM6095.06.
+Which is P?
+Aina menyimpan RM5000 pada kadar 4% setahun dikompaun setiap suku tahun selama 5 tahun dan mendapat RM6095.06.
+Yang manakah P?",6095.06,5000,0.04,4,5,B,
+,radio,"Nazrin invests RM8000 at 3% per annum compounded semi-annually for 5 years and gets RM9274.25.
+Which is P?
+Nazrin melabur RM8000 pada kadar 3% setahun dikompaun dua kali setahun selama 5 tahun dan mendapat RM9274.25.
+Yang manakah P?",9274.25,8000,0.03,2,5,B,
+,radio,"Aina deposits RM5000 at 4% per annum compounded quarterly for 5 years and gets RM6095.06.
+Which is r?
+Aina menyimpan RM5000 pada kadar 4% setahun dikompaun setiap suku tahun selama 5 tahun dan mendapat RM6095.06.
+Yang manakah r?",6095.06,5000,0.04,4,5,C,
+,radio,"Lim invests RM10000 at 3% per annum compounded quarterly for 4 years and gets RM11255.09.
+Which is r?
+Lim melabur RM10000 pada kadar 3% setahun dikompaun setiap suku tahun selama 4 tahun dan mendapat RM11255.09.
+Yang manakah r?",11255.09,10000,0.03,4,4,C,
+,radio,"Aina deposits RM5000 at 4% per annum compounded quarterly for 5 years and gets RM6095.06.
+Which is t?
+Aina menyimpan RM5000 pada kadar 4% setahun dikompaun setiap suku tahun selama 5 tahun dan mendapat RM6095.06.
+Yang manakah t?",6095.06,5000,0.04,4,5,E,
+,radio,"Farah invests RM15000 at 5% per annum compounded semi-annually for 4 years and gets RM18572.67.
+Which is t?
+Farah melabur RM15000 pada kadar 5% setahun dikompaun dua kali setahun selama 4 tahun dan mendapat RM18572.67.
+Yang manakah t?",18572.67,15000,0.05,2,4,E,
+,radio,"Aina deposits RM5000 at 4% per annum compounded quarterly for 5 years and gets RM6095.06.
+Which is MV?
+Aina menyimpan RM5000 pada kadar 4% setahun dikompaun setiap suku tahun selama 5 tahun dan mendapat RM6095.06.
+Yang manakah MV?",6095.06,5000,0.04,4,5,A,
+,radio,"Nazrin invests RM8000 at 3% per annum compounded semi-annually for 5 years and gets RM9274.25.
+Which is MV?
+Nazrin melabur RM8000 pada kadar 3% setahun dikompaun dua kali setahun selama 5 tahun dan mendapat RM9274.25.
+Yang manakah MV?",9274.25,8000,0.03,2,5,A,
+,radio,"Aina deposits RM5000 at 4% per annum compounded quarterly for 5 years and gets RM6095.06.
+Which is n?
+Aina menyimpan RM5000 pada kadar 4% setahun dikompaun setiap suku tahun selama 5 tahun dan mendapat RM6095.06.
+Yang manakah n?",6095.06,5000,0.04,4,5,D,
+,radio,"Nazrin invests RM8000 at 3% per annum compounded semi-annually for 5 years and gets RM9274.25.
+Which is n?
+Nazrin melabur RM8000 pada kadar 3% setahun dikompaun dua kali setahun selama 5 tahun dan mendapat RM9274.25.
+Yang manakah n?",9274.25,8000,0.03,2,5,D,
+,radio,"Lim invests RM10000 at 3% per annum compounded quarterly for 4 years and gets RM11255.09.
+Which is n?
+Lim melabur RM10000 pada kadar 3% setahun dikompaun setiap suku tahun selama 4 tahun dan mendapat RM11255.09.
+Yang manakah n?",11255.09,10000,0.03,4,4,D,
+,radio,"Farah invests RM15000 at 5% per annum compounded semi-annually for 4 years and gets RM18572.67.
+Which is n?
+Farah melabur RM15000 pada kadar 5% setahun dikompaun dua kali setahun selama 4 tahun dan mendapat RM18572.67.
+Yang manakah n?",18572.67,15000,0.05,2,4,D,
+,radio,"Jason saves RM4000 at 2% per annum compounded monthly for 2 years and gets RM4204.04.
+Which is n?
+Jason menyimpan RM4000 pada kadar 2% setahun dikompaun setiap bulan selama 2 tahun dan mendapat RM4204.04.
+Yang manakah n?",4204.04,4000,0.02,12,2,D,
