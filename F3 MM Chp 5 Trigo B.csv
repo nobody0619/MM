@@ -1,0 +1,13 @@
+﻿title,type,question,A,B,C,D,answer,image
+Trigo,radio,"Tan θ = 3/4, Opposite = 9, Adjacent = ?",6,12,16,3,B,
+,radio,"Tan θ = 3/4, Adjacent = 8, Opposite = ?",6,12,4,16,A,
+,radio,"Tan θ = 5/12, Opposite = 10, Adjacent = ?",24,20,12,30,A,
+,radio,"Tan θ = 5/12, Adjacent = 24, Opposite = ?",10,5,12,20,A,
+,radio,"Sin θ = 3/5, Opposite = 6, Hypotenuse = ?",10,8,12,15,A,
+,radio,"Sin θ = 3/5, Hypotenuse = 15, Opposite = ?",9,6,12,3,A,
+,radio,"Sin θ = 5/13, Opposite = 10, Hypotenuse = ?",13,20,26,15,C,
+,radio,"Sin θ = 5/13, Hypotenuse = 26, Opposite = ?",10,5,20,13,A,
+,radio,"Cos θ = 4/5, Adjacent = 8, Hypotenuse = ?",10,12,16,20,A,
+,radio,"Cos θ = 4/5, Hypotenuse = 20, Adjacent = ?",8,16,10,12,B,
+,radio,"Cos θ = 12/13, Adjacent = 24, Hypotenuse = ?",13,26,36,48,B,
+,radio,"Cos θ = 12/13, Hypotenuse = 26, Adjacent = ?",12,24,36,48,B,

@@ -1,0 +1,19 @@
+﻿title,type,question,A,B,C,D,E,F,answer,image
+Trigo,radio,"In a right triangle, opposite = 3, hypotenuse = 5. Which ratio is used?
+Dalam segitiga bersudut tegak, Sisi bertentangan = 3, Hipotenus = 5. Nisbah manakah digunakan?",sin,cos,tan,,,,A,
+,radio,"In a right triangle, opposite = 7, hypotenuse = 25. Which ratio is used?
+Dalam segitiga bersudut tegak, Sisi bertentangan = 7, Hipotenus = 25. Nisbah manakah digunakan?",sin,cos,tan,,,,A,
+,radio,"In a right triangle, adjacent = 4, hypotenuse = 5. Which ratio is used?
+Dalam segitiga bersudut tegak, Sisi bersebelahan = 4, Hipotenus = 5. Nisbah manakah digunakan?",sin,cos,tan,,,,B,
+,radio,"In a right triangle, adjacent = 12, hypotenuse = 13. Which ratio is used?
+Dalam segitiga bersudut tegak, Sisi bersebelahan = 12, Hipotenus = 13. Nisbah manakah digunakan?",sin,cos,tan,,,,B,
+,radio,"In a right triangle, opposite = 6, adjacent = 8. Which ratio is used?
+Dalam segitiga bersudut tegak, Sisi bertentangan = 6, Sisi bersebelahan = 8. Nisbah manakah digunakan?",sin,cos,tan,,,,C,
+,radio,"In a right triangle, opposite = 9, adjacent = 12. Which ratio is used?
+Dalam segitiga bersudut tegak, Sisi bertentangan = 9, Sisi bersebelahan = 12. Nisbah manakah digunakan?",sin,cos,tan,,,,C,
+,radio,"sin θ represents which ratio?
+sin θ mewakili nisbah yang mana?",o/a,o/h,a/h,h/a,h/o,a/o,B,
+,radio,"cos θ represents which ratio?
+cos θ mewakili nisbah yang mana?",o/a,o/h,a/h,h/a,h/o,a/o,C,
+,radio,"tan θ represents which ratio?
+tan θ mewakili nisbah yang mana?",o/a,o/h,a/h,h/a,h/o,a/o,A,
