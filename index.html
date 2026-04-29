@@ -56,6 +56,12 @@
     .hint{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6}
     .btn.done{background:#16a34a}
     .btn.done:disabled{opacity:1;cursor:not-allowed}
+    .hp-wrap{margin-top:6px;max-width:420px}
+    .hp-line{display:flex;align-items:center;gap:8px}
+    .hp-label{font-size:13px;font-weight:700;white-space:nowrap}
+    .hp-bar{flex:1;height:14px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+    .hp-fill{height:100%;width:100%;background:linear-gradient(90deg,#ef4444,#f97316);transition:width .25s ease}
+    .hp-text{font-size:12px;color:#6b7280;white-space:nowrap}
     .modal-mask{position:fixed;inset:0;background:rgba(17,24,39,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
     .modal{background:#fff;max-width:720px;width:100%;max-height:85vh;overflow:auto;border-radius:18px;padding:18px;text-align:left}
     .footer-help{margin-top:14px;font-size:14px;line-height:1.7}
@@ -77,13 +83,14 @@
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
       <button id="startBtn" class="btn" type="button">进入 / Start</button>
       <button id="rulesBtn" class="btn ghost" type="button">📜 游戏规则</button>
+      <button id="refreshBtn" class="btn ghost" type="button">🔄 更新页面</button>
     </div>
     <p id="loginMsg" class="muted"></p>
-    <p class="hint">首次加载题库会稍微慢一点，请耐心等几秒。提交成绩时也需要一点时间，请不要马上关闭页面。</p>
+    <p class="hint">首次加载题库会稍微慢一点，请耐心等几秒。若不能登入，请点“更新页面”或用 Chrome / Safari 打开。提交成绩时也需要一点时间，请不要马上关闭页面。</p>
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.04.17.4</div>
+    <div class="version-tag" id="versionTag">版本：2026.04.18.1</div>
   </div>
 </div>
 
@@ -105,7 +112,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.04.17.4</div>
+    <div class="version-tag">版本：2026.04.18.1</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -119,6 +126,7 @@
       <div class="left">
         <div id="quiz-title" style="font-weight:bold;"></div>
         <div id="mode-badge" class="muted"></div>
+        <div id="battleHpBox" class="hp-wrap" style="display:none;"></div>
       </div>
       <div class="right">
         <span id="score">得分: 0</span>
@@ -202,7 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.04.17.4';
+  const APP_VERSION = '2026.04.18.1';
+  let serverBaseMs = 0;
+  let perfBaseMs = 0;
 
   let user = '';
   let displayUser = '';
@@ -215,6 +225,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let qs = [], queue = [], score = 0, correct = 0, wrong = 0, chapterStart = 0;
   let currentExpGain = 0;
   let currentBossMeta = null;
+  let battleHp = null;
+  let battleMaxHp = null;
+  let battleLabel = '';
+  let currentMonsterRowsForBoss = [];
   let countCache = new Map();
   let monsterQuestionCache = new Map();
   let progressState = { exp:0, level:1, monsters:{}, bosses:{} };
@@ -229,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('startBtn').onclick = handleLogin;
   document.getElementById('rulesBtn').onclick = () => toggleRules(true);
+  if (document.getElementById('refreshBtn')) document.getElementById('refreshBtn').onclick = forceRefreshPage;
   document.getElementById('topRulesBtn').onclick = () => toggleRules(true);
   document.getElementById('topBoardBtn').onclick = () => toggleBoard(true);
   document.getElementById('closeRulesBtn').onclick = () => toggleRules(false);
@@ -261,6 +276,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }catch(_){}
   }
 
+
+  function ensureLatestVersion_(){
+    try {
+      const key = 'kee_quiz_app_version';
+      const oldV = localStorage.getItem(key) || '';
+      if (oldV !== APP_VERSION) {
+        localStorage.setItem(key, APP_VERSION);
+        const u = new URL(location.href);
+        if (u.searchParams.get('v') !== APP_VERSION) {
+          u.searchParams.set('v', APP_VERSION);
+          location.replace(u.toString());
+        }
+      }
+    } catch(_) {}
+  }
+
+  function forceRefreshPage(){
+    try {
+      localStorage.setItem('kee_quiz_app_version', APP_VERSION);
+      const u = new URL(location.href);
+      u.searchParams.set('v', APP_VERSION);
+      u.searchParams.set('reload', String(Date.now()));
+      location.replace(u.toString());
+    } catch(_) {
+      location.reload();
+    }
+  }
+
+  function nowMs(){
+    return serverBaseMs ? serverBaseMs + (performance.now() - perfBaseMs) : Date.now();
+  }
+
   function toggleRules(show){
     document.getElementById('rulesMask').style.display = show ? 'flex' : 'none';
   }
@@ -271,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const box = document.getElementById('boardContent');
     box.innerHTML = '加载中...';
     try {
-      const r = await safeJsonp({ action:'getLeaderboard', book, limit:'10' }, 1);
+      const r = await apiFetch({ action:'getLeaderboard', book, limit:'10' }, 3);
       if (!r.ok) { box.innerHTML = '<div class="muted">读取排行榜失败</div>'; return; }
       const rows = Array.isArray(r.rows) ? r.rows : [];
       if (!rows.length) { box.innerHTML = '<div class="muted">暂时还没有排行榜数据</div>'; return; }
@@ -309,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
     msg.textContent = '正在验证...';
     setLoading(true, '正在验证密码并加载题库，请稍等...');
     try {
-      const r = await safeJsonp({ action:'checkPassword', book, name:nm, password:pwd, ua:getUserAgent() }, 1);
+      const r = await apiFetch({ action:'checkPassword', book, name:nm, password:pwd, ua:getUserAgent() }, 1);
       if (!r.ok) { msg.textContent = explainLoginError(r.error || '验证失败'); return; }
       displayUser = nm;
       user = normalizeName(nm);
@@ -345,12 +392,24 @@ document.addEventListener('DOMContentLoaded', () => {
     return '连接验证失败，请刷新后重试；若还是不行，请改用 Chrome / Safari，或联络老师。';
   }
 
-  async function safeJsonp(params, retries=1){
+  async function apiFetch(params, retries=3){
     let lastErr;
     for (let i=0;i<=retries;i++){
-      try { return await jsonp(params); } catch (e) { lastErr = e; }
+      try {
+        const u = new URL(SCRIPT_URL);
+        Object.entries({ ...params, v:APP_VERSION, _:String(Date.now()) }).forEach(([k,v]) => u.searchParams.set(k, v == null ? '' : String(v)));
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 12000);
+        const res = await fetch(u.toString(), { method:'GET', cache:'no-store', credentials:'omit', signal:controller.signal });
+        clearTimeout(timer);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return await res.json();
+      } catch (e) {
+        lastErr = e;
+        await new Promise(r => setTimeout(r, 550 + i * 450));
+      }
     }
-    throw lastErr || new Error('JSONP error');
+    throw lastErr || new Error('Fetch error');
   }
 
   function normalizeName(name){
@@ -381,25 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function jsonp(params){
-    return new Promise((resolve, reject) => {
-      const cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-      const s = document.createElement('script');
-      const q = new URLSearchParams({ ...params, callback: cb, _: String(Date.now()) });
-      window[cb] = (data) => {
-        cleanup();
-        resolve(data);
-      };
-      s.onerror = () => { cleanup(); reject(new Error('JSONP error')); };
-      function cleanup(){
-        delete window[cb];
-        s.remove();
-      }
-      s.src = SCRIPT_URL + '?' + q.toString();
-      document.body.appendChild(s);
-    });
-  }
-
   function loadChapters(){
     return new Promise((resolve, reject) => {
       Papa.parse('Chapters.csv', {
@@ -423,9 +463,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadProgress(){
-    const r = await safeJsonp({ action:'getProgress', book, name:user }, 1);
+    const r = await apiFetch({ action:'getProgress', book, name:user }, 3);
     if (r.ok) {
       progressState = r.progress || { exp:0, level:1, monsters:{}, bosses:{} };
+      serverBaseMs = Number(r.serverNow || 0);
+      perfBaseMs = performance.now();
     }
   }
 
@@ -500,7 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const st = progressState.monsters[monsterId] || {};
     const titleText = `${row[chapterKey]}${row[labelKey] ? ' — ' + row[labelKey] : ''}`;
     const cnt = await getQuestionCount(row[sheetKey]);
-    const now = Date.now();
+    const now = nowMs();
     const isDead = st.reviveAt && Number(st.reviveAt) > now;
     const statusText = isDead ? `💀 已击败（${daysLeft(st.reviveAt)}后复活）` : '🟢 存活';
     const streak = Number(st.killStreak || 0);
@@ -532,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bossState = progressState.bosses[String(babNo)] || { hp:100, killCount:0, reviveAt:0 };
     const total = arr.length;
     let deadCount = 0;
-    const now = Date.now();
+    const now = nowMs();
     for (const row of arr) {
       const st = progressState.monsters[buildMonsterId(row)] || {};
       if (st.reviveAt && Number(st.reviveAt) > now) deadCount++;
@@ -555,6 +597,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function startQuiz(row, mode){
+    if (mode === 'monster') {
+      setLoading(true, '正在检查小怪状态，请稍等...');
+      try {
+        const guard = await apiFetch({ action:'canStartBattle', book, name:user, type:'monster', monsterId:buildMonsterId(row) }, 3);
+        if (!guard.ok || !guard.canStart) {
+          setLoading(false);
+          alert(guard.error || '这只小怪还没有复活，不能重复挑战。');
+          await loadProgress();
+          updateHeader();
+          return showChapterList();
+        }
+      } catch(e) {
+        setLoading(false);
+        alert('连接验证失败，请点“更新页面”后再试。');
+        return;
+      }
+    }
     currentMode = mode;
     currentRow = row;
     currentBab = getMainChapterNo(row[chapterKey]);
@@ -571,6 +630,8 @@ document.addEventListener('DOMContentLoaded', () => {
       complete(res){
         qs = res.data.map(q => ({...q, attempt:0})).filter(q => q.question && String(q.question).trim());
         queue = shuffle([...qs]);
+        if (mode === 'monster') setupBattleHp('🧟 小怪血量', qs.length, qs.length);
+        else clearBattleHp();
         document.getElementById('quiz').style.display = 'block';
         updateUI(0);
         setLoading(false);
@@ -581,6 +642,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function startBossFight(babNo, arr){
+    setLoading(true, '正在检查 Boss 状态，请稍等...');
+    try {
+      const guard = await apiFetch({ action:'canStartBattle', book, name:user, type:'boss', bab:String(babNo) }, 3);
+      if (!guard.ok || !guard.canStart) {
+        setLoading(false);
+        alert(guard.error || 'Boss 还没有复活，不能重复挑战。');
+        await loadProgress();
+        updateHeader();
+        return showChapterList();
+      }
+    } catch(e) {
+      setLoading(false);
+      alert('连接验证失败，请点“更新页面”后再试。');
+      return;
+    }
     currentMode = 'boss';
     currentRow = { [chapterKey]: `Bab ${babNo}`, [labelKey]:'Boss Challenge' };
     currentBab = babNo;
@@ -602,6 +678,9 @@ document.addEventListener('DOMContentLoaded', () => {
     qs = shuffle(all).slice(0, count).map(q => ({...q, attempt:0}));
     queue = [...qs];
     currentBossMeta = { totalPool: all.length, count };
+    currentMonsterRowsForBoss = arr.map(r => buildMonsterId(r));
+    const bState = (progressState.bosses && progressState.bosses[String(babNo)]) || {};
+    setupBattleHp('👹 Boss血量（预估）', Number(bState.hp || 100), 100);
     document.getElementById('quiz').style.display = 'block';
     updateUI(0);
     setLoading(false);
@@ -621,6 +700,38 @@ document.addEventListener('DOMContentLoaded', () => {
         error(){ resolve([]); }
       });
     });
+  }
+
+
+  function setupBattleHp(label, hp, maxHp){
+    battleLabel = label || '怪兽血量';
+    battleHp = Math.max(0, Number(hp || 0));
+    battleMaxHp = Math.max(1, Number(maxHp || hp || 1));
+    renderBattleHp();
+  }
+
+  function damageBattleHp(amount){
+    if (battleHp == null) return;
+    battleHp = Math.max(0, battleHp - Math.max(0, Number(amount || 0)));
+    renderBattleHp();
+  }
+
+  function clearBattleHp(){
+    battleHp = battleMaxHp = null;
+    document.getElementById('battleHpBox').style.display = 'none';
+    document.getElementById('battleHpBox').innerHTML = '';
+  }
+
+  function renderBattleHp(){
+    const box = document.getElementById('battleHpBox');
+    if (battleHp == null || battleMaxHp == null) { clearBattleHp(); return; }
+    const pct = Math.max(0, Math.min(100, Math.round(battleHp / battleMaxHp * 100)));
+    box.style.display = 'block';
+    box.innerHTML = `<div class="hp-line">
+      <span class="hp-label">${escapeHtml(battleLabel)}</span>
+      <div class="hp-bar"><div class="hp-fill" style="width:${pct}%"></div></div>
+      <span class="hp-text">${Math.ceil(battleHp)} / ${Math.ceil(battleMaxHp)}</span>
+    </div>`;
   }
 
   function updateUI(delta){
@@ -700,6 +811,8 @@ document.addEventListener('DOMContentLoaded', () => {
         delta = isC ? (q.attempt?1:2) : (q.attempt?-2:-1);
       }
       score += delta; if (isC) correct++; else wrong++;
+      if (isC && currentMode === 'monster') damageBattleHp(1);
+      if (isC && currentMode === 'boss') damageBattleHp(Math.ceil(100 / Math.max(1, qs.length)));
 
       const explainLine = q.explain ? `<br><span style="font-weight:normal">${String(q.explain)}</span>` : '';
       fb.innerHTML = isC
@@ -727,6 +840,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('quiz').style.display='none';
     document.getElementById('finish').style.display='block';
 
+    const quizEndTime = Date.now();
+    const usedSeconds = chapterStart ? Math.floor((quizEndTime - chapterStart)/1000) : 0;
     const accuracy = qs.length ? (correct / qs.length) : 0;
     const accuracyPct = Math.round(accuracy * 100);
     let battleMsg = '';
@@ -737,7 +852,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const perfect = accuracy >= 0.90;
       if (kill) exp += 20;
       if (perfect) exp += 30;
-      const res = await jsonp({ action:'updateMonster', book, name:user, monsterId:buildMonsterId(currentRow), accuracy: accuracyPct });
+      const res = await apiFetch({ action:'updateMonster', book, name:user, monsterId:buildMonsterId(currentRow), accuracy: accuracyPct }, 3);
       if (res.ok) {
         progressState = res.progress;
         battleMsg = kill
@@ -748,7 +863,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (accuracy >= 0.90) exp += 150;
       else if (accuracy >= 0.70) exp += 60;
       else if (accuracy >= 0.50) exp += 25;
-      const res = await jsonp({ action:'updateBoss', book, name:user, bab:String(currentBab), accuracy: accuracyPct });
+      const res = await apiFetch({ action:'updateBoss', book, name:user, bab:String(currentBab), accuracy: accuracyPct, monsterIds:JSON.stringify(currentMonsterRowsForBoss || []) }, 3);
       if (res.ok) {
         progressState = res.progress;
         const b = res.boss || {};
@@ -760,18 +875,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     currentExpGain = exp;
-    const expRes = await jsonp({ action:'addExp', book, name:user, amount:String(exp), reason:currentMode });
-    const usedSeconds = Math.floor((Date.now()-chapterStart)/1000);
+    const quizIdForExp = currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey];
+    const expRes = await apiFetch({ action:'addExp', book, name:user, quizId:quizIdForExp, amount:String(exp), reason:currentMode }, 3);
     const prevLevel = Number(progressState.level || 1);
-    if (expRes.ok) progressState = expRes.progress;
+    if (expRes.ok) {
+      currentExpGain = Number(expRes.awarded || 0);
+      progressState = expRes.progress;
+    } else {
+      currentExpGain = 0;
+    }
     updateHeader(prevLevel);
 
     document.getElementById('finish-msg').textContent = `恭喜 ${displayUser || user}，本次完成！`;
-    document.getElementById('stats').textContent = `模式：${modeLabel(currentMode)}｜得分: ${score}｜正确率: ${accuracyPct}%｜答对 ${correct} 题｜答错 ${wrong} 题｜用时：${formatDuration(usedSeconds)}｜EXP +${exp}`;
-    document.getElementById('battle-result').textContent = battleMsg;
+    document.getElementById('stats').textContent = `模式：${modeLabel(currentMode)}｜得分: ${score}｜正确率: ${accuracyPct}%｜答对 ${correct} 题｜答错 ${wrong} 题｜用时：${formatDuration(usedSeconds)}｜EXP +${currentExpGain}`;
+    document.getElementById('battle-result').textContent = battleMsg + (currentExpGain === 0 && exp > 0 ? '（今天这个练习拿经验已达10次上限）' : '');
     document.getElementById('submit-status').textContent = '正在上传成绩…';
 
-    await submitScore();
+    await submitScore(usedSeconds);
 
     const ctrl=document.getElementById('controls'); ctrl.innerHTML='';
     const back=document.createElement('button'); back.className='btn';
@@ -784,7 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return m === 'practice' ? '普通练习' : (m === 'monster' ? '小怪挑战' : 'Boss挑战');
   }
 
-  async function submitScore(){
+  async function submitScore(durationSeconds){
     const form = document.getElementById('postForm');
     const payload = {
       book,
@@ -793,29 +913,25 @@ document.addEventListener('DOMContentLoaded', () => {
       score,
       correct,
       wrong,
-      time: Math.floor((Date.now()-chapterStart)/1000),
+      time: Number(durationSeconds || 0),
       mode: currentMode,
       expGained: currentExpGain
     };
-    form.book.value    = payload.book;
-    form.quizId.value  = payload.quizId;
-    form.name.value    = payload.name;
-    form.score.value   = payload.score;
-    form.correct.value = payload.correct;
-    form.wrong.value   = payload.wrong;
-    form.time.value    = payload.time;
-    form.mode.value    = payload.mode;
-    form.expGained.value = payload.expGained;
     document.getElementById('submit-status').textContent = '正在提交成绩，请稍等...';
     setLoading(true, '正在提交成绩，请不要关闭页面...');
-    form.submit();
-    await new Promise(resolve => setTimeout(resolve, 900));
-    setLoading(false);
-    document.getElementById('submit-status').textContent = '✅ 成绩已提交（若 Apps Script 权限正确）';
+    try {
+      const res = await apiFetch({ action:'submitScore', ...payload }, 3);
+      document.getElementById('submit-status').textContent = res.ok ? '✅ 成绩已提交' : '⚠️ 成绩提交失败，请截图给老师';
+    } catch(e) {
+      console.error(e);
+      document.getElementById('submit-status').textContent = '⚠️ 成绩提交失败，请刷新或截图给老师';
+    } finally {
+      setLoading(false);
+    }
   }
 
   function daysLeft(ts){
-    const diff = Number(ts) - Date.now();
+    const diff = Number(ts) - nowMs();
     const days = Math.ceil(diff / (1000*60*60*24));
     return `${Math.max(days,1)}天`;
   }
