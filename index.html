@@ -69,10 +69,82 @@
     .loading-box{position:fixed;inset:0;background:rgba(255,255,255,.78);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
     .loading-inner{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 20px;max-width:420px;width:100%;box-shadow:0 10px 28px rgba(0,0,0,.08)}
     .version-tag{margin-top:10px;font-size:12px;color:var(--muted)}
+
+    body.theme-soft{--bg:#f6f8fb;--card:#fff;--line:#e5e7eb;--text:#111827;--muted:#6b7280}
+    body.theme-warm{--bg:#fff7ed;--card:#fffaf2;--line:#fed7aa;--text:#1f2937;--muted:#78716c}
+    body.theme-green{--bg:#ecfdf5;--card:#fff;--line:#bbf7d0;--text:#064e3b;--muted:#047857}
+    body.theme-blue{--bg:#eff6ff;--card:#fff;--line:#bfdbfe;--text:#172554;--muted:#2563eb}
+    body.theme-dark{--bg:#111827;--card:#1f2937;--line:#374151;--text:#f9fafb;--muted:#d1d5db;--primary:#14b8a6}
+    body.theme-dark input[type="text"],body.theme-dark input[type="password"]{background:#111827;color:#f9fafb;border-color:#4b5563}
+    body.theme-dark .btn.secondary{background:#111827;color:#f9fafb;border-color:#9ca3af}
+    body.theme-dark .btn.ghost{background:#312e81;color:#e0e7ff;border-color:#818cf8}
+    .theme-panel{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+    .theme-dot{border:1px solid var(--line);border-radius:999px;padding:7px 10px;background:var(--card);color:var(--text);cursor:pointer;font-size:13px}
+    .theme-dot.active{outline:3px solid rgba(20,184,166,.28);font-weight:700}
+    .battle-arena{display:none;margin:10px 0 12px;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+    .fighters{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .fighter{text-align:center;min-width:95px}
+    .fighter-icon{font-size:38px;line-height:1.1;transition:transform .18s ease, filter .18s ease}
+    .fighter-name{font-weight:700;font-size:13px;margin-top:4px}
+    .vs{font-size:24px;font-weight:800;color:var(--muted)}
+    .hp-wrap{margin-top:6px}
+    .hp-line{display:flex;align-items:center;gap:8px;margin-top:6px}
+    .hp-label{font-size:13px;font-weight:700;white-space:nowrap;min-width:70px}
+    .hp-bar{flex:1;height:14px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+    .hp-fill{height:100%;width:100%;background:linear-gradient(90deg,#ef4444,#f97316);transition:width .25s ease}
+    .hp-fill.player{background:linear-gradient(90deg,#22c55e,#10b981)}
+    .hp-text{font-size:12px;color:var(--muted);white-space:nowrap;min-width:46px;text-align:right}
+    .combat-msg{font-size:13px;color:var(--muted);margin-top:8px;min-height:18px}
+    .hit{animation:hitShake .25s ease}
+    .attack{animation:attackMove .25s ease}
+    .heal{animation:healPulse .35s ease}
+    @keyframes hitShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+    @keyframes attackMove{0%,100%{transform:translateX(0) scale(1)}50%{transform:translateX(18px) scale(1.08)}}
+    @keyframes healPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18);filter:drop-shadow(0 0 8px #22c55e)}}
+    .focus-card{outline:4px solid rgba(20,184,166,.35);box-shadow:0 0 0 4px rgba(20,184,166,.12)}
+
+
+    body.theme-dark{--bg:#0f172a;--card:#1e293b;--line:#475569;--text:#f8fafc;--muted:#cbd5e1;--primary:#14b8a6}
+    body.theme-dark .card,
+    body.theme-dark .monster-item,
+    body.theme-dark .boss-card,
+    body.theme-dark .xp-wrap,
+    body.theme-dark .battle-arena,
+    body.theme-dark .modal,
+    body.theme-dark .theme-dot,
+    body.theme-dark .pill{
+      background:#1e293b!important;
+      color:#f8fafc!important;
+      border-color:#475569!important;
+    }
+    body.theme-dark .title-main,
+    body.theme-dark h2,
+    body.theme-dark h3,
+    body.theme-dark .group-title,
+    body.theme-dark .meta,
+    body.theme-dark .muted,
+    body.theme-dark .footer-help,
+    body.theme-dark .version-tag{
+      color:#f8fafc!important;
+    }
+    body.theme-dark .meta *{color:#f8fafc!important}
+    body.theme-dark .alive{color:#4ade80!important}
+    body.theme-dark .dead{color:#f87171!important}
+    body.theme-dark .locked{color:#fbbf24!important}
+    body.theme-dark input[type="text"],
+    body.theme-dark input[type="password"]{
+      background:#0f172a!important;
+      color:#f8fafc!important;
+      border-color:#64748b!important;
+    }
+    body.theme-dark .btn.secondary{background:#0f172a!important;color:#f8fafc!important;border-color:#94a3b8!important}
+    body.theme-dark .btn.ghost{background:#312e81!important;color:#e0e7ff!important;border-color:#818cf8!important}
+    body.theme-dark .option-label:hover{background:#334155!important}
+
     .hide{display:none!important}
   </style>
 </head>
-<body>
+<body class="theme-soft">
 
 <div id="login" class="login-wrap">
   <div class="card">
@@ -85,12 +157,19 @@
       <button id="rulesBtn" class="btn ghost" type="button">📜 游戏规则</button>
       <button id="refreshBtn" class="btn ghost" type="button">🔄 更新页面</button>
     </div>
+    <div class="theme-panel" id="themePanelLogin">
+      <button class="theme-dot" data-theme="soft">白色</button>
+      <button class="theme-dot" data-theme="warm">米色</button>
+      <button class="theme-dot" data-theme="green">绿色</button>
+      <button class="theme-dot" data-theme="blue">蓝色</button>
+      <button class="theme-dot" data-theme="dark">Dark</button>
+    </div>
     <p id="loginMsg" class="muted"></p>
     <p class="hint">首次加载题库会稍微慢一点，请耐心等几秒。若不能登入，请点“更新页面”或用 Chrome / Safari 打开。提交成绩时也需要一点时间，请不要马上关闭页面。</p>
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.04.18.1</div>
+    <div class="version-tag" id="versionTag">版本：2026.05.05.1</div>
   </div>
 </div>
 
@@ -105,6 +184,15 @@
       <div class="pill" id="statBook">科目：-</div>
       <button id="topRulesBtn" class="btn ghost small" type="button">📜 游戏规则</button>
       <button id="topBoardBtn" class="btn ghost small" type="button">🏆 排行榜</button>
+      
+    </div>
+    <div class="muted" style="margin-top:8px;">背景颜色 / Theme</div>
+    <div class="theme-panel" id="themePanelTop">
+      <button class="theme-dot" data-theme="soft">白色</button>
+      <button class="theme-dot" data-theme="warm">米色</button>
+      <button class="theme-dot" data-theme="green">绿色</button>
+      <button class="theme-dot" data-theme="blue">蓝色</button>
+      <button class="theme-dot" data-theme="dark">Dark</button>
     </div>
     <div class="xp-wrap">
       <div class="xp-lv" id="statLevel">Lv 1</div>
@@ -112,7 +200,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.04.18.1</div>
+    <div class="version-tag">版本：2026.05.05.1</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -122,6 +210,18 @@
     <button type="button" id="backToListTop">🏠 回到章节选择</button>
   </div>
   <div class="card">
+    <div id="battleArena" class="battle-arena">
+      <div class="fighters">
+        <div class="fighter"><div id="playerIcon" class="fighter-icon">👦</div><div class="fighter-name" id="playerName">学生</div></div>
+        <div class="vs">⚔️</div>
+        <div class="fighter"><div id="monsterIcon" class="fighter-icon">🧟</div><div class="fighter-name" id="enemyName">小怪</div></div>
+      </div>
+      <div class="hp-wrap">
+        <div class="hp-line"><span class="hp-label">学生HP</span><div class="hp-bar"><div class="hp-fill player" id="playerHpFill"></div></div><span class="hp-text" id="playerHpText">5/5</span></div>
+        <div class="hp-line"><span class="hp-label" id="enemyHpLabel">怪兽HP</span><div class="hp-bar"><div class="hp-fill" id="enemyHpFill"></div></div><span class="hp-text" id="enemyHpText">0/0</span></div>
+      </div>
+      <div id="combatMsg" class="combat-msg"></div>
+    </div>
     <div id="topbar">
       <div class="left">
         <div id="quiz-title" style="font-weight:bold;"></div>
@@ -210,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.04.18.1';
+  const APP_VERSION = '2026.05.05.1';
   let serverBaseMs = 0;
   let perfBaseMs = 0;
 
@@ -225,9 +325,16 @@ document.addEventListener('DOMContentLoaded', () => {
   let qs = [], queue = [], score = 0, correct = 0, wrong = 0, chapterStart = 0;
   let currentExpGain = 0;
   let currentBossMeta = null;
+  let baseTotal = 0;
   let battleHp = null;
   let battleMaxHp = null;
   let battleLabel = '';
+  let playerHp = 5;
+  let playerMaxHp = 5;
+  let wrongStreak = 0;
+  let correctStreak = 0;
+  let battleEndedByDeath = false;
+  let lastFocusId = '';
   let currentMonsterRowsForBoss = [];
   let countCache = new Map();
   let monsterQuestionCache = new Map();
@@ -255,6 +362,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('finish').style.display = 'none';
     showChapterList();
   };
+  setupThemeButtons();
+
   document.getElementById('logoutBtn').onclick = () => {
     localStorage.removeItem(STORAGE_KEY);
     location.reload();
@@ -306,6 +415,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function nowMs(){
     return serverBaseMs ? serverBaseMs + (performance.now() - perfBaseMs) : Date.now();
+  }
+
+
+  function setupThemeButtons(){
+    const savedTheme = localStorage.getItem('kee_quiz_theme') || 'soft';
+    applyTheme(savedTheme);
+    document.querySelectorAll('.theme-dot').forEach(btn => btn.onclick = () => applyTheme(btn.dataset.theme || 'soft'));
+  }
+
+  function applyTheme(theme){
+    const allowed = ['soft','warm','green','blue','dark'];
+    if (!allowed.includes(theme)) theme = 'soft';
+    document.body.classList.remove('theme-soft','theme-warm','theme-green','theme-blue','theme-dark');
+    document.body.classList.add('theme-' + theme);
+    localStorage.setItem('kee_quiz_theme', theme);
+    document.querySelectorAll('.theme-dot').forEach(btn => btn.classList.toggle('active', btn.dataset.theme === theme));
   }
 
   function toggleRules(show){
@@ -462,6 +587,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+
+  function addCacheBuster(url){
+    const sep = String(url).includes('?') ? '&' : '?';
+    return String(url) + sep + '_cache=' + Date.now();
+  }
+
+  function parseCsvOnce(url){
+    return new Promise(resolve => {
+      Papa.parse(addCacheBuster(url), {
+        download:true, header:true, skipEmptyLines:true,
+        complete(res){
+          const list = (res.data || []).map(q => ({...q, attempt:0})).filter(q => q.question && String(q.question).trim());
+          resolve(list);
+        },
+        error(){ resolve([]); }
+      });
+    });
+  }
+
+  async function loadQuestionsReliable(url, tries=4){
+    for (let i=0;i<tries;i++){
+      const list = await parseCsvOnce(url);
+      if (list.length) return list;
+      await new Promise(r => setTimeout(r, 650 + i * 450));
+    }
+    return [];
+  }
+
   async function loadProgress(){
     const r = await apiFetch({ action:'getProgress', book, name:user }, 3);
     if (r.ok) {
@@ -513,6 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
       wrap.appendChild(g);
     }
     document.getElementById('chapters').style.display = 'block';
+    focusLastCard();
   }
 
   function buildMonsterId(row){
@@ -539,6 +693,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const item = document.createElement('div'); item.className = 'monster-item';
     const left = document.createElement('div'); left.className = 'title';
     const monsterId = buildMonsterId(row);
+    item.id = 'monster_' + hashId(monsterId);
     const st = progressState.monsters[monsterId] || {};
     const titleText = `${row[chapterKey]}${row[labelKey] ? ' — ' + row[labelKey] : ''}`;
     const cnt = await getQuestionCount(row[sheetKey]);
@@ -571,6 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function buildBossCard(babNo, arr){
     const card = document.createElement('div'); card.className = 'boss-card';
     const left = document.createElement('div'); left.className = 'title';
+    card.id = 'boss_' + String(babNo);
     const bossState = progressState.bosses[String(babNo)] || { hp:100, killCount:0, reviveAt:0 };
     const total = arr.length;
     let deadCount = 0;
@@ -616,6 +772,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     currentMode = mode;
     currentRow = row;
+    if (mode === 'monster' || mode === 'practice') lastFocusId = 'monster_' + hashId(buildMonsterId(row));
     currentBab = getMainChapterNo(row[chapterKey]);
     currentBossMeta = null;
     document.getElementById('chapters').style.display = 'none';
@@ -625,20 +782,21 @@ document.addEventListener('DOMContentLoaded', () => {
     currentExpGain = 0;
     chapterStart = 0;
     setLoading(true, '正在加载题目，请稍等...');
-    Papa.parse(row[sheetKey], {
-      download:true, header:true, skipEmptyLines:true,
-      complete(res){
-        qs = res.data.map(q => ({...q, attempt:0})).filter(q => q.question && String(q.question).trim());
-        queue = shuffle([...qs]);
-        if (mode === 'monster') setupBattleHp('🧟 小怪血量', qs.length, qs.length);
-        else clearBattleHp();
-        document.getElementById('quiz').style.display = 'block';
-        updateUI(0);
-        setLoading(false);
-        nextQ();
-      },
-      error(){ setLoading(false); alert('这个章节的题目加载失败了，请检查表格链接。'); showChapterList(); }
-    });
+    qs = await loadQuestionsReliable(row[sheetKey], 4);
+    if (!qs.length) {
+      setLoading(false);
+      alert('题库暂时没有成功加载，请等几秒后再按一次。系统不会提交空成绩。');
+      clearBattleHp();
+      return showChapterList();
+    }
+    baseTotal = qs.length;
+    queue = shuffle([...qs]);
+    if (mode === 'monster') setupBattleHp('🧟 小怪血量', qs.length, qs.length);
+    else clearBattleHp();
+    document.getElementById('quiz').style.display = 'block';
+    updateUI(0);
+    setLoading(false);
+    nextQ();
   }
 
   async function startBossFight(babNo, arr){
@@ -659,6 +817,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     currentMode = 'boss';
     currentRow = { [chapterKey]: `Bab ${babNo}`, [labelKey]:'Boss Challenge' };
+    lastFocusId = 'boss_' + String(babNo);
     currentBab = babNo;
     currentExpGain = 0;
     chapterStart = 0;
@@ -674,8 +833,15 @@ document.addEventListener('DOMContentLoaded', () => {
       all = all.concat(list);
     }
     all = all.filter(q => q.question && String(q.question).trim());
+    if (!all.length) {
+      setLoading(false);
+      alert('Boss题库暂时没有成功加载，请等几秒后再试。系统不会提交空成绩。');
+      clearBattleHp();
+      return showChapterList();
+    }
     const count = Math.min(20, Math.max(8, Math.ceil(all.length * 0.25)));
     qs = shuffle(all).slice(0, count).map(q => ({...q, attempt:0}));
+    baseTotal = qs.length;
     queue = [...qs];
     currentBossMeta = { totalPool: all.length, count };
     currentMonsterRowsForBoss = arr.map(r => buildMonsterId(r));
@@ -687,19 +853,11 @@ document.addEventListener('DOMContentLoaded', () => {
     nextQ();
   }
 
-  function loadQuestions(url){
-    if (monsterQuestionCache.has(url)) return Promise.resolve(monsterQuestionCache.get(url));
-    return new Promise(resolve => {
-      Papa.parse(url, {
-        download:true, header:true, skipEmptyLines:true,
-        complete(res){
-          const list = res.data;
-          monsterQuestionCache.set(url, list);
-          resolve(list);
-        },
-        error(){ resolve([]); }
-      });
-    });
+  async function loadQuestions(url){
+    if (monsterQuestionCache.has(url)) return monsterQuestionCache.get(url);
+    const list = await loadQuestionsReliable(url, 4);
+    if (list.length) monsterQuestionCache.set(url, list);
+    return list;
   }
 
 
@@ -707,32 +865,35 @@ document.addEventListener('DOMContentLoaded', () => {
     battleLabel = label || '怪兽血量';
     battleHp = Math.max(0, Number(hp || 0));
     battleMaxHp = Math.max(1, Number(maxHp || hp || 1));
+    playerMaxHp = 5; playerHp = 5; wrongStreak = 0; correctStreak = 0; battleEndedByDeath = false;
+    document.getElementById('battleArena').style.display = (currentMode === 'practice') ? 'none' : 'block';
+    document.getElementById('playerName').textContent = displayUser || user || '学生';
+    document.getElementById('enemyName').textContent = currentMode === 'boss' ? 'Boss' : '小怪';
+    document.getElementById('monsterIcon').textContent = currentMode === 'boss' ? '👹' : '🧟';
+    document.getElementById('enemyHpLabel').textContent = currentMode === 'boss' ? 'Boss HP' : '小怪HP';
+    setCombatMsg('⚠️ 连错3题会额外扣1HP；连对3题会回复1HP。');
     renderBattleHp();
   }
 
-  function damageBattleHp(amount){
-    if (battleHp == null) return;
-    battleHp = Math.max(0, battleHp - Math.max(0, Number(amount || 0)));
-    renderBattleHp();
-  }
-
-  function clearBattleHp(){
-    battleHp = battleMaxHp = null;
-    document.getElementById('battleHpBox').style.display = 'none';
-    document.getElementById('battleHpBox').innerHTML = '';
-  }
-
+  function damageBattleHp(amount){ if (battleHp == null) return; battleHp = Math.max(0, battleHp - Math.max(0, Number(amount || 0))); animateEnemyHit(); renderBattleHp(); }
+  function damagePlayerHp(amount){ if (playerHp == null) return; playerHp = Math.max(0, playerHp - Math.max(0, Number(amount || 0))); animatePlayerHit(); renderBattleHp(); }
+  function healPlayerHp(amount){ if (playerHp == null) return; const before = playerHp; playerHp = Math.min(playerMaxHp, playerHp + Math.max(0, Number(amount || 0))); if (playerHp > before) animatePlayerHeal(); renderBattleHp(); }
+  function clearBattleHp(){ battleHp = battleMaxHp = null; playerHp = playerMaxHp = 5; wrongStreak = correctStreak = 0; battleEndedByDeath = false; const arena=document.getElementById('battleArena'); if(arena) arena.style.display='none'; }
   function renderBattleHp(){
-    const box = document.getElementById('battleHpBox');
-    if (battleHp == null || battleMaxHp == null) { clearBattleHp(); return; }
-    const pct = Math.max(0, Math.min(100, Math.round(battleHp / battleMaxHp * 100)));
-    box.style.display = 'block';
-    box.innerHTML = `<div class="hp-line">
-      <span class="hp-label">${escapeHtml(battleLabel)}</span>
-      <div class="hp-bar"><div class="hp-fill" style="width:${pct}%"></div></div>
-      <span class="hp-text">${Math.ceil(battleHp)} / ${Math.ceil(battleMaxHp)}</span>
-    </div>`;
+    if (currentMode === 'practice' || battleHp == null || battleMaxHp == null) { clearBattleHp(); return; }
+    document.getElementById('battleArena').style.display = 'block';
+    const ePct = Math.max(0, Math.min(100, Math.round(battleHp / battleMaxHp * 100)));
+    const pPct = Math.max(0, Math.min(100, Math.round(playerHp / playerMaxHp * 100)));
+    document.getElementById('enemyHpFill').style.width = ePct + '%';
+    document.getElementById('enemyHpText').textContent = `${Math.ceil(battleHp)} / ${Math.ceil(battleMaxHp)}`;
+    document.getElementById('playerHpFill').style.width = pPct + '%';
+    document.getElementById('playerHpText').textContent = `${Math.ceil(playerHp)} / ${Math.ceil(playerMaxHp)}`;
   }
+  function setCombatMsg(msg){ const el=document.getElementById('combatMsg'); if(el) el.textContent=msg||''; }
+  function animateEnemyHit(){ const el=document.getElementById('monsterIcon'); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }
+  function animatePlayerHit(){ const el=document.getElementById('playerIcon'); el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); }
+  function animatePlayerAttack(){ const el=document.getElementById('playerIcon'); el.classList.remove('attack'); void el.offsetWidth; el.classList.add('attack'); }
+  function animatePlayerHeal(){ const el=document.getElementById('playerIcon'); el.classList.remove('heal'); void el.offsetWidth; el.classList.add('heal'); }
 
   function updateUI(delta){
     document.getElementById('score').textContent = `得分: ${score} ${delta ? '(' + (delta>0?'+':'') + delta + ')' : ''}`;
@@ -744,7 +905,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function nextQ(){
     const qa = document.getElementById('question-area');
     qa.innerHTML = ''; updateUI(0);
-    if (queue.length === 0) return finishQuiz();
+    if (queue.length === 0) {
+      if (!qs.length) {
+        alert('题库没有成功加载，系统不会提交空成绩。请回到章节后再试一次。');
+        return showChapterList();
+      }
+      return finishQuiz();
+    }
 
     const q = queue.shift();
     if (!chapterStart) chapterStart = Date.now();
@@ -811,8 +978,21 @@ document.addEventListener('DOMContentLoaded', () => {
         delta = isC ? (q.attempt?1:2) : (q.attempt?-2:-1);
       }
       score += delta; if (isC) correct++; else wrong++;
-      if (isC && currentMode === 'monster') damageBattleHp(1);
-      if (isC && currentMode === 'boss') damageBattleHp(Math.ceil(100 / Math.max(1, qs.length)));
+      if (currentMode !== 'practice') {
+        if (isC) {
+          animatePlayerAttack(); wrongStreak = 0; correctStreak++;
+          if (currentMode === 'monster') damageBattleHp(1);
+          if (currentMode === 'boss') damageBattleHp(Math.ceil(100 / Math.max(1, qs.length)));
+          if (correctStreak >= 3) { correctStreak = 0; healPlayerHp(1); setCombatMsg('🔥 连对3题，回复 1 HP！'); }
+          else setCombatMsg('⚔️ 攻击成功！');
+        } else {
+          correctStreak = 0; wrongStreak++;
+          let hurt = 1;
+          if (wrongStreak >= 3) { hurt += 1; wrongStreak = 0; setCombatMsg('💥 连错3题，额外扣 1 HP！'); }
+          else setCombatMsg('💥 被怪兽攻击，扣 1 HP！');
+          damagePlayerHp(hurt);
+        }
+      }
 
       const explainLine = q.explain ? `<br><span style="font-weight:normal">${String(q.explain)}</span>` : '';
       fb.innerHTML = isC
@@ -824,7 +1004,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const nb = document.createElement('button'); nb.className='btn secondary'; nb.textContent = '下一题'; nb.onclick = nextQ;
       div.appendChild(nb);
 
-      if (!isC && currentMode !== 'boss'){
+      if (currentMode !== 'practice' && playerHp <= 0) {
+        battleEndedByDeath = true;
+        fb.innerHTML += '<br><span style="color:#b91c1c">💀 你被怪兽击败了，本次挑战失败，没有EXP。</span>';
+        nb.textContent = '查看结果';
+        queue = [];
+      }
+
+      if (!isC && currentMode !== 'boss' && !battleEndedByDeath){
         q.attempt++;
         for (let i=0;i<2;i++) {
           queue.splice(Math.floor(Math.random()*(queue.length+1)),0,{...q});
@@ -837,37 +1024,49 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function finishQuiz(){
+    if (!qs.length) {
+      alert('题库没有成功加载，系统不会提交空成绩。请等几秒后再试。');
+      return showChapterList();
+    }
     document.getElementById('quiz').style.display='none';
     document.getElementById('finish').style.display='block';
 
     const quizEndTime = Date.now();
     const usedSeconds = chapterStart ? Math.floor((quizEndTime - chapterStart)/1000) : 0;
-    const accuracy = qs.length ? (correct / qs.length) : 0;
+    const accuracy = baseTotal ? Math.min(1, correct / baseTotal) : 0;
     const accuracyPct = Math.round(accuracy * 100);
     let battleMsg = '';
     let exp = 10;
+    if (battleEndedByDeath && currentMode !== 'practice') exp = 0;
 
     if (currentMode === 'monster') {
-      const kill = accuracy >= 0.70;
-      const perfect = accuracy >= 0.90;
+      const kill = !battleEndedByDeath && accuracy >= 0.70;
+      const perfect = !battleEndedByDeath && accuracy >= 0.90;
       if (kill) exp += 20;
       if (perfect) exp += 30;
-      const res = await apiFetch({ action:'updateMonster', book, name:user, monsterId:buildMonsterId(currentRow), accuracy: accuracyPct }, 3);
+      if (battleEndedByDeath) exp = 0;
+      const res = battleEndedByDeath ? { ok:true, progress:progressState } : await apiFetch({ action:'updateMonster', book, name:user, monsterId:buildMonsterId(currentRow), accuracy: accuracyPct }, 3);
       if (res.ok) {
         progressState = res.progress;
-        battleMsg = kill
-          ? (perfect ? `💀 Perfect Kill！小怪已死亡，30天后复活。` : `💀 小怪已击败，进入复活倒数。`)
-          : `⚠️ 挑战失败！未达到击杀门槛（需要 ≥70%），小怪仍存活。`;
+        battleMsg = battleEndedByDeath
+          ? `💀 挑战失败！你被小怪击败了，建议先做普通练习。`
+          : (kill
+            ? (perfect ? `💀 Perfect Kill！小怪已死亡，30天后复活。` : `💀 小怪已击败，进入复活倒数。`)
+            : `⚠️ 挑战失败！未达到击杀门槛（需要 ≥70%），小怪仍存活。`);
       }
     } else if (currentMode === 'boss') {
-      if (accuracy >= 0.90) exp += 150;
+      if (battleEndedByDeath) exp = 0;
+      else if (accuracy >= 0.90) exp += 150;
       else if (accuracy >= 0.70) exp += 60;
       else if (accuracy >= 0.50) exp += 25;
-      const res = await apiFetch({ action:'updateBoss', book, name:user, bab:String(currentBab), accuracy: accuracyPct, monsterIds:JSON.stringify(currentMonsterRowsForBoss || []) }, 3);
+      const res = battleEndedByDeath
+        ? { ok:true, progress:progressState, boss:{ hp:((progressState.bosses && progressState.bosses[String(currentBab)] || {}).hp || 100), killedNow:false } }
+        : await apiFetch({ action:'updateBoss', book, name:user, bab:String(currentBab), accuracy: accuracyPct, monsterIds:JSON.stringify(currentMonsterRowsForBoss || []) }, 3);
       if (res.ok) {
         progressState = res.progress;
         const b = res.boss || {};
-        if (b.killedNow) battleMsg = '👹 Boss 已被击杀！本 Bab 所有小怪也同步死亡一次。';
+        if (battleEndedByDeath) battleMsg = '💀 Boss战失败！你被Boss击败了，本次没有EXP。';
+        else if (b.killedNow) battleMsg = '👹 Boss 已被击杀！本 Bab 所有小怪也同步死亡一次。';
         else battleMsg = `⚔️ Boss 仍存活，当前 HP：${Number(b.hp||0)}/100。需要继续挑战。`;
       }
     } else {
@@ -942,6 +1141,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const r = s % 60;
     return m ? `${m}分 ${r}秒` : `${r}秒`;
   }
+
+
+  function hashId(s){ let h=0; const str=String(s||''); for(let i=0;i<str.length;i++) h=((h<<5)-h)+str.charCodeAt(i)|0; return Math.abs(h).toString(36); }
+  function focusLastCard(){ if(!lastFocusId) return; setTimeout(()=>{ const el=document.getElementById(lastFocusId); if(!el) return; el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('focus-card'); setTimeout(()=>el.classList.remove('focus-card'),2400); },180); }
 
   function escapeHtml(s){
     return String(s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
