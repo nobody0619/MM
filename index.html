@@ -141,6 +141,19 @@
     body.theme-dark .btn.ghost{background:#312e81!important;color:#e0e7ff!important;border-color:#818cf8!important}
     body.theme-dark .option-label:hover{background:#334155!important}
 
+
+    .firework-piece{
+      position:fixed;width:8px;height:8px;border-radius:50%;
+      pointer-events:none;z-index:99999;
+      animation:fireworkFly .9s ease-out forwards;
+    }
+    @keyframes fireworkFly{
+      0%{transform:translate(0,0) scale(1);opacity:1}
+      100%{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}
+    }
+    .finish-pop{animation:finishPop .45s ease}
+    @keyframes finishPop{0%{transform:scale(.96);opacity:.75}60%{transform:scale(1.03);opacity:1}100%{transform:scale(1)}}
+
     .hide{display:none!important}
   </style>
 </head>
@@ -170,7 +183,7 @@
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.05.19.1</div>
+    <div class="version-tag" id="versionTag">版本：2026.05.20.3</div>
   </div>
 </div>
 
@@ -201,7 +214,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.05.19.1</div>
+    <div class="version-tag">版本：2026.05.20.3</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -312,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.05.19.1';
+  const APP_VERSION = '2026.05.20.3';
   let serverBaseMs = 0;
   let perfBaseMs = 0;
   let deferredInstallPrompt = null;
@@ -338,6 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let correctStreak = 0;
   let battleEndedByDeath = false;
   let lastFocusId = '';
+  let afterFinishRefreshTimer = null;
   let currentMonsterRowsForBoss = [];
   let countCache = new Map();
   let monsterQuestionCache = new Map();
@@ -818,7 +832,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     baseTotal = qs.length;
     queue = shuffle([...qs]);
-    if (mode === 'monster') setupBattleHp('🧟 小怪血量', qs.length, qs.length);
+    if (mode === 'monster') {
+      // 打怪模式也必须做完整份；HP 只是视觉血量，按题数调整。
+      setupBattleHp('🧟 小怪血量', qs.length, qs.length);
+      setCombatMsg(`打怪模式需要完成整份练习；小怪血量会随答对慢慢减少。`);
+    }
     else clearBattleHp();
     document.getElementById('quiz').style.display = 'block';
     updateUI(0);
@@ -1050,6 +1068,70 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('question-area').appendChild(div);
   }
 
+
+  function fireGameAction(params){
+    try {
+      const q = new URLSearchParams({ ...params, v:APP_VERSION, _:String(Date.now()) });
+      const img = new Image();
+      img.referrerPolicy = 'no-referrer';
+      img.src = SCRIPT_URL + '?' + q.toString();
+      window.__gameBeacons = window.__gameBeacons || [];
+      window.__gameBeacons.push(img);
+      setTimeout(() => {
+        try { window.__gameBeacons = (window.__gameBeacons || []).slice(-30); } catch(e) {}
+      }, 5000);
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
+
+
+  function launchFireworks(){
+    const colors = ['#ef4444','#f97316','#facc15','#22c55e','#06b6d4','#6366f1','#ec4899'];
+    for (let b=0;b<4;b++){
+      const cx = window.innerWidth * (0.2 + Math.random()*0.6);
+      const cy = window.innerHeight * (0.18 + Math.random()*0.35);
+      setTimeout(() => {
+        for (let i=0;i<26;i++){
+          const p = document.createElement('div');
+          p.className = 'firework-piece';
+          p.style.left = cx + 'px';
+          p.style.top = cy + 'px';
+          p.style.background = colors[Math.floor(Math.random()*colors.length)];
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 60 + Math.random()*110;
+          p.style.setProperty('--dx', Math.cos(angle)*dist + 'px');
+          p.style.setProperty('--dy', Math.sin(angle)*dist + 'px');
+          document.body.appendChild(p);
+          setTimeout(() => p.remove(), 1000);
+        }
+      }, b*180);
+    }
+    const fin = document.getElementById('finish');
+    if (fin) { fin.classList.remove('finish-pop'); void fin.offsetWidth; fin.classList.add('finish-pop'); }
+  }
+
+  function refreshLatestProgressSoon(){
+    const status = document.getElementById('submit-status');
+    const attempts = [1200, 3500, 7000];
+    attempts.forEach((delay, idx) => {
+      setTimeout(async () => {
+        try {
+          await loadProgress();
+          updateHeader();
+          if (idx === attempts.length - 1 && status) {
+            status.textContent = (status.textContent || '').replace('（后台处理中）','') + '｜怪兽状态已更新';
+          }
+        } catch(e) {
+          if (idx === attempts.length - 1 && status) {
+            status.textContent = (status.textContent || '') + '｜怪兽状态稍后刷新';
+          }
+        }
+      }, delay);
+    });
+  }
+
   async function finishQuiz(){
     if (!qs.length) {
       alert('题库没有成功加载，系统不会提交空成绩。请等几秒后再试。');
@@ -1057,6 +1139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     document.getElementById('quiz').style.display='none';
     document.getElementById('finish').style.display='block';
+    launchFireworks();
 
     const quizEndTime = Date.now();
     const usedSeconds = chapterStart ? Math.floor((quizEndTime - chapterStart)/1000) : 0;
@@ -1066,64 +1149,84 @@ document.addEventListener('DOMContentLoaded', () => {
     let exp = 10;
     if (battleEndedByDeath && currentMode !== 'practice') exp = 0;
 
+    // 关键改动：下面所有怪兽 / Boss / EXP 更新全部改成 fire-and-forget。
+    // 学生不用等这些动作完成；下次进入章节时再读取最新怪兽状态即可。
     if (currentMode === 'monster') {
       const kill = !battleEndedByDeath && accuracy >= 0.70;
       const perfect = !battleEndedByDeath && accuracy >= 0.90;
       if (kill) exp += 20;
       if (perfect) exp += 30;
       if (battleEndedByDeath) exp = 0;
-      const res = battleEndedByDeath ? { ok:true, progress:progressState } : await apiFetch({ action:'updateMonster', book, name:user, monsterId:buildMonsterId(currentRow), accuracy: accuracyPct }, 3);
-      if (res.ok) {
-        progressState = res.progress;
-        battleMsg = battleEndedByDeath
-          ? `💀 挑战失败！你被小怪击败了，建议先做普通练习。`
-          : (kill
-            ? (perfect ? `💀 Perfect Kill！小怪已死亡，7天后复活。` : `💀 小怪已击败，进入复活倒数。`)
-            : `⚠️ 挑战失败！未达到击杀门槛（需要 ≥70%），小怪仍存活。`);
+
+      if (!battleEndedByDeath) {
+        fireGameAction({ action:'updateMonster', book, name:user, monsterId:buildMonsterId(currentRow), accuracy:accuracyPct });
       }
+
+      battleMsg = battleEndedByDeath
+        ? `💀 挑战失败！你被小怪击败了，建议先做普通练习。`
+        : (kill
+          ? (perfect ? `💀 Perfect Kill！小怪已死亡，7天后复活。` : `💀 小怪已击败，进入复活倒数。`)
+          : `⚠️ 挑战失败！未达到击杀门槛（需要 ≥70%），小怪仍存活。`);
     } else if (currentMode === 'boss') {
       if (battleEndedByDeath) exp = 0;
       else if (accuracy >= 0.90) exp += 150;
       else if (accuracy >= 0.70) exp += 60;
       else if (accuracy >= 0.50) exp += 25;
-      const res = battleEndedByDeath
-        ? { ok:true, progress:progressState, boss:{ hp:((progressState.bosses && progressState.bosses[String(currentBab)] || {}).hp || 100), killedNow:false } }
-        : await apiFetch({ action:'updateBoss', book, name:user, bab:String(currentBab), accuracy: accuracyPct, monsterIds:JSON.stringify(currentMonsterRowsForBoss || []) }, 3);
-      if (res.ok) {
-        progressState = res.progress;
-        const b = res.boss || {};
-        if (battleEndedByDeath) battleMsg = '💀 Boss战失败！你被Boss击败了，本次没有EXP。';
-        else if (b.killedNow) battleMsg = '👹 Boss 已被击杀！本 Bab 所有小怪也同步死亡一次。';
-        else battleMsg = `⚔️ Boss 仍存活，当前 HP：${Number(b.hp||0)}/100。需要继续挑战。`;
+
+      if (!battleEndedByDeath) {
+        fireGameAction({
+          action:'updateBoss',
+          book,
+          name:user,
+          bab:String(currentBab),
+          accuracy:accuracyPct,
+          monsterIds:JSON.stringify(currentMonsterRowsForBoss || [])
+        });
       }
+
+      if (battleEndedByDeath) battleMsg = '💀 Boss战失败！你被Boss击败了，本次没有EXP。';
+      else if (accuracy >= 0.90) battleMsg = '👹 Boss 战结果已送出！若成功击杀，本 Bab 小怪也会同步死亡。';
+      else battleMsg = `⚔️ Boss 战结果已送出，稍后会更新 Boss HP。`;
     } else {
-      battleMsg = accuracy >= 70 ? '📘 练习完成，已记录成绩。' : '📘 练习完成。';
+      battleMsg = accuracy >= 0.70 ? '📘 练习完成，已记录成绩。' : '📘 练习完成。';
     }
 
     currentExpGain = exp;
     const quizIdForExp = currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey];
-    const expRes = await apiFetch({ action:'addExp', book, name:user, quizId:quizIdForExp, amount:String(exp), reason:currentMode }, 3);
-    const prevLevel = Number(progressState.level || 1);
-    if (expRes.ok) {
-      currentExpGain = Number(expRes.awarded || 0);
-      progressState = expRes.progress;
-    } else {
-      currentExpGain = 0;
+
+    if (exp > 0) {
+      fireGameAction({ action:'addExp', book, name:user, quizId:quizIdForExp, amount:String(exp), reason:currentMode });
     }
-    updateHeader(prevLevel);
+
+    // 本地先显示经验，不等待 Sheet 回应。
+    try {
+      progressState.exp = Number(progressState.exp || 0) + Number(exp || 0);
+      progressState.level = calcLevel ? calcLevel(progressState.exp) : progressState.level;
+    } catch(e) {}
+    updateHeader(Number(progressState.level || 1));
 
     document.getElementById('finish-msg').textContent = `恭喜 ${displayUser || user}，本次完成！`;
     document.getElementById('stats').textContent = `模式：${modeLabel(currentMode)}｜得分: ${score}｜正确率: ${accuracyPct}%｜答对 ${correct} 题｜答错 ${wrong} 题｜用时：${formatDuration(usedSeconds)}｜EXP +${currentExpGain}`;
-    document.getElementById('battle-result').textContent = battleMsg + (currentExpGain === 0 && exp > 0 ? '（今天这个练习拿经验已达10次上限）' : '');
-    document.getElementById('submit-status').textContent = '正在上传成绩…';
+    document.getElementById('battle-result').textContent = battleMsg;
+    document.getElementById('submit-status').textContent = '正在送出成绩…';
 
     await submitScore(usedSeconds);
+    refreshLatestProgressSoon();
 
     const ctrl=document.getElementById('controls'); ctrl.innerHTML='';
     const back=document.createElement('button'); back.className='btn';
     back.textContent='返回章节选择';
-    back.onclick=()=>{ document.getElementById('finish').style.display='none'; showChapterList(); };
+    back.onclick=()=>{ 
+      document.getElementById('finish').style.display='none'; 
+      showChapterList(); 
+      loadProgress().then(()=>{ updateHeader(); showChapterList(); }).catch(()=>{});
+    };
     ctrl.appendChild(back);
+  }
+
+
+  function calcLevel(exp){
+    return Math.max(1, Math.floor(Number(exp || 0) / 100) + 1);
   }
 
   function modeLabel(m){
@@ -1181,8 +1284,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   function submitQueueBeacon(params){
+    // 最快提交：优先使用 navigator.sendBeacon，不等待 Apps Script / Google Sheet 完成。
+    // 注意：学生端会马上放行；Google Sheet 里出现时间仍由 Google 后台决定。
     try {
-      const q = new URLSearchParams({ ...params, action:'submitToQueue', v:APP_VERSION, _:String(Date.now()) });
+      const payload = { ...params, action:'submitToQueue', v:APP_VERSION, _:String(Date.now()) };
+      const body = new URLSearchParams(payload);
+
+      if (navigator.sendBeacon) {
+        const ok = navigator.sendBeacon(SCRIPT_URL, body);
+        if (ok) return true;
+      }
+
+      // sendBeacon 不支持时，用 keepalive fetch；不等待结果。
+      try {
+        fetch(SCRIPT_URL, {
+          method:'POST',
+          body,
+          mode:'no-cors',
+          keepalive:true,
+          credentials:'omit',
+          cache:'no-store'
+        }).catch(()=>{});
+        return true;
+      } catch(e) {}
+
+      // 最后兜底：Image GET
+      const q = new URLSearchParams(payload);
       const img = new Image();
       img.referrerPolicy = 'no-referrer';
       img.src = SCRIPT_URL + '?' + q.toString();
@@ -1219,8 +1346,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const sent = submitQueueBeacon(payload);
       if (!sent) throw new Error('send failed');
 
-      await new Promise(resolve => setTimeout(resolve, 150));
-      document.getElementById('submit-status').textContent = '✅ 成绩已送出（稍后自动分类）';
+      await new Promise(resolve => setTimeout(resolve, 80));
+      document.getElementById('submit-status').textContent = '✅ 成绩已送出（后台处理中）';
     } catch(e) {
       console.error(e);
       savePendingScore(payload);
@@ -1252,7 +1379,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch(e) {}
     }
     localStorage.removeItem(key);
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 80));
     setLoading(false);
     alert(`补交完成：已送出 ${okCount} 份`);
   }
