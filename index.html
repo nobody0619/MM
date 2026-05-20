@@ -156,6 +156,7 @@
       <button id="startBtn" class="btn" type="button">进入 / Start</button>
       <button id="rulesBtn" class="btn ghost" type="button">📜 游戏规则</button>
       <button id="refreshBtn" class="btn ghost" type="button">🔄 更新页面</button>
+      <button id="installBtn" class="btn ghost" type="button">📲 加入手机首页</button>
     </div>
     <div class="theme-panel" id="themePanelLogin">
       <button class="theme-dot" data-theme="soft">白色</button>
@@ -169,7 +170,7 @@
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.05.05.7</div>
+    <div class="version-tag" id="versionTag">版本：2026.05.19.1</div>
   </div>
 </div>
 
@@ -200,7 +201,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.05.05.7</div>
+    <div class="version-tag">版本：2026.05.19.1</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -255,7 +256,8 @@
 <form id="postForm"
       action="https://script.google.com/macros/s/AKfycbwOadAK74XfAiOFkokD6zlQ8kQZTFDI0_SVWwMSSRgT8mwuoCac2VSAIj8X07L7NVVF/exec"
       method="post" target="postFrame" style="display:none;">
-  <input name="action" value="submitScore"/>
+  <input name="action" value="submitScoreFast"/>
+  <input name="submitId"/>
   <input name="book"/>
   <input name="quizId"/><input name="name"/><input name="score"/>
   <input name="correct"/><input name="wrong"/><input name="time"/><input name="mode"/><input name="expGained"/>
@@ -310,9 +312,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.05.05.7';
+  const APP_VERSION = '2026.05.19.1';
   let serverBaseMs = 0;
   let perfBaseMs = 0;
+  let deferredInstallPrompt = null;
 
   let user = '';
   let displayUser = '';
@@ -399,6 +402,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     } catch(_) {}
+  }
+
+  async function handleInstallToHome(){
+    const ua = navigator.userAgent || '';
+    const isIOS = /iphone|ipad|ipod/i.test(ua);
+    const isAndroid = /android/i.test(ua);
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      try { await deferredInstallPrompt.userChoice; } catch(e) {}
+      deferredInstallPrompt = null;
+      return;
+    }
+    if (isIOS) {
+      alert('iPhone/iPad：请用 Safari 打开 → 点分享按钮 → 选择“加入主画面”。');
+    } else if (isAndroid) {
+      alert('Android：请用 Chrome 打开 → 点右上角 ⋮ → 选择“加入主画面”或“安装应用”。');
+    } else {
+      alert('这个功能主要给手机使用。电脑可以用浏览器菜单选择“安装应用”或建立快捷方式。');
+    }
   }
 
   function forceRefreshPage(){
@@ -1056,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
         battleMsg = battleEndedByDeath
           ? `💀 挑战失败！你被小怪击败了，建议先做普通练习。`
           : (kill
-            ? (perfect ? `💀 Perfect Kill！小怪已死亡，30天后复活。` : `💀 小怪已击败，进入复活倒数。`)
+            ? (perfect ? `💀 Perfect Kill！小怪已死亡，7天后复活。` : `💀 小怪已击败，进入复活倒数。`)
             : `⚠️ 挑战失败！未达到击杀门槛（需要 ≥70%），小怪仍存活。`);
       }
     } else if (currentMode === 'boss') {
@@ -1109,7 +1131,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  function jsonpApi(params, timeoutMs=15000){
+  function jsonpApi(params, timeoutMs=9000){
     return new Promise((resolve, reject) => {
       const cb = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
       const s = document.createElement('script');
@@ -1145,25 +1167,39 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function submitPayloadHybrid(payload){
-    // 1) fetch: fastest when browser allows it
+    // 成绩提交必须快：直接用 JSONP 确认 Apps Script 回应，不先跑慢速 fetch 多次重试。
     try {
-      const r = await apiFetch(payload, 2);
+      const r = await jsonpApi(payload, 9000);
       if (r && r.ok) return r;
-    } catch(e) {}
+      throw new Error((r && r.error) || 'submit failed');
+    } catch(e) {
+      // 兜底发送一次 form POST，但不把它当成确认成功。
+      try { await submitByHiddenForm({ ...payload, action:'submitScore' }); } catch(_) {}
+      throw e;
+    }
+  }
 
-    // 2) JSONP: avoids CORS, can confirm Apps Script response
+
+  function submitQueueBeacon(params){
     try {
-      const r = await jsonpApi(payload, 15000);
-      if (r && r.ok) return r;
-    } catch(e) {}
-
-    // 3) hidden form POST: last fallback, cannot read response but usually writes
-    return await submitByHiddenForm({ ...payload, action:'submitScore' });
+      const q = new URLSearchParams({ ...params, action:'submitToQueue', v:APP_VERSION, _:String(Date.now()) });
+      const img = new Image();
+      img.referrerPolicy = 'no-referrer';
+      img.src = SCRIPT_URL + '?' + q.toString();
+      window.__scoreBeacons = window.__scoreBeacons || [];
+      window.__scoreBeacons.push(img);
+      setTimeout(() => {
+        try { window.__scoreBeacons = (window.__scoreBeacons || []).slice(-20); } catch(e) {}
+      }, 5000);
+      return true;
+    } catch(e) {
+      return false;
+    }
   }
 
   async function submitScore(durationSeconds){
     const payload = {
-      action:'submitScoreV2',
+      action:'submitToQueue',
       submitId: `${book}|${displayUser || user}|${currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey]}|${Date.now()}`,
       book,
       quizId: currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey],
@@ -1176,23 +1212,19 @@ document.addEventListener('DOMContentLoaded', () => {
       expGained: currentExpGain
     };
 
-    document.getElementById('submit-status').textContent = '正在提交成绩，请稍等...';
-    setLoading(true, '正在提交成绩，请不要关闭页面...');
+    document.getElementById('submit-status').textContent = '正在送出成绩...';
+    setLoading(true, '正在送出成绩...');
 
     try {
-      const res = await submitPayloadHybrid(payload);
-      if (res && res.ok) {
-        const extra = res.sheetName ? `（${res.sheetName} 第${res.row || '-'}行）` : (res.via === 'form' ? '（已发送）' : '');
-        document.getElementById('submit-status').textContent = res.duplicate
-          ? '✅ 成绩已提交（重复记录已自动忽略）'
-          : '✅ 成绩已提交 ' + extra;
-        return;
-      }
-      throw new Error((res && res.error) || 'submitScore failed');
+      const sent = submitQueueBeacon(payload);
+      if (!sent) throw new Error('send failed');
+
+      await new Promise(resolve => setTimeout(resolve, 150));
+      document.getElementById('submit-status').textContent = '✅ 成绩已送出（稍后自动分类）';
     } catch(e) {
       console.error(e);
       savePendingScore(payload);
-      document.getElementById('submit-status').innerHTML = '⚠️ 成绩提交失败，已暂存在本机。请点“补交成绩”或截图给老师。 <button class="btn small secondary" onclick="window.retryPendingScores && window.retryPendingScores()">补交成绩</button>';
+      document.getElementById('submit-status').innerHTML = '⚠️ 成绩暂存在本机。请点“补交成绩”或截图给老师。 <button class="btn small secondary" onclick="window.retryPendingScores && window.retryPendingScores()">补交成绩</button>';
     } finally {
       setLoading(false);
     }
@@ -1213,18 +1245,16 @@ document.addEventListener('DOMContentLoaded', () => {
     try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { arr = []; }
     if (!arr.length) return alert('没有待补交成绩。');
     setLoading(true, '正在补交成绩...');
-    const remain = [];
     let okCount = 0;
     for (const item of arr) {
       try {
-        const res = await submitPayloadHybrid(item);
-        if (res && res.ok) okCount++;
-        else remain.push(item);
-      } catch(e) { remain.push(item); }
+        if (submitQueueBeacon({ ...item, action:'submitToQueue' })) okCount++;
+      } catch(e) {}
     }
-    localStorage.setItem(key, JSON.stringify(remain));
+    localStorage.removeItem(key);
+    await new Promise(resolve => setTimeout(resolve, 200));
     setLoading(false);
-    alert(`补交完成：成功 ${okCount}，剩余 ${remain.length}`);
+    alert(`补交完成：已送出 ${okCount} 份`);
   }
 
   function daysLeft(ts){
