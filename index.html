@@ -183,7 +183,17 @@
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.05.20.3</div>
+    <div class="version-tag" id="versionTag">版本：2026.05.26.2</div>
+  </div>
+</div>
+
+
+<div id="wrongBook" class="card" style="display:none;">
+  <h2>📝 错题重练区</h2>
+  <p class="muted">答错会自动加入错题本；在错题本里答对会移除，答错会继续保留到下次。</p>
+  <div id="wrongBookList"></div>
+  <div class="controls">
+    <button class="btn secondary" id="wrongBackBtn" type="button">返回章节选择</button>
   </div>
 </div>
 
@@ -198,6 +208,7 @@
       <div class="pill" id="statBook">科目：-</div>
       <button id="topRulesBtn" class="btn ghost small" type="button">📜 游戏规则</button>
       <button id="topBoardBtn" class="btn ghost small" type="button">🏆 排行榜</button>
+      <button id="wrongBookBtn" class="btn ghost small" type="button">📝 错题本</button>
       
     </div>
     <div class="muted" style="margin-top:8px;">背景颜色 / Theme</div>
@@ -214,7 +225,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.05.20.3</div>
+    <div class="version-tag">版本：2026.05.26.2</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -325,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.05.20.3';
+  const APP_VERSION = '2026.05.26.2';
   let serverBaseMs = 0;
   let perfBaseMs = 0;
   let deferredInstallPrompt = null;
@@ -353,6 +364,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastFocusId = '';
   let afterFinishRefreshTimer = null;
   let currentMonsterRowsForBoss = [];
+  let wrongBookMap = {};
+  let currentWrongId = '';
   let countCache = new Map();
   let monsterQuestionCache = new Map();
   let progressState = { exp:0, level:1, monsters:{}, bosses:{} };
@@ -370,6 +383,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('refreshBtn')) document.getElementById('refreshBtn').onclick = forceRefreshPage;
   document.getElementById('topRulesBtn').onclick = () => toggleRules(true);
   document.getElementById('topBoardBtn').onclick = () => toggleBoard(true);
+  document.getElementById('wrongBookBtn').onclick = showWrongBook;
+  document.getElementById('wrongBackBtn').onclick = () => { document.getElementById('wrongBook').style.display='none'; showChapterList(); };
   document.getElementById('closeRulesBtn').onclick = () => toggleRules(false);
   document.getElementById('closeBoardBtn').onclick = () => toggleBoard(false);
   document.getElementById('rulesMask').onclick = (e) => { if (e.target.id === 'rulesMask') toggleRules(false); };
@@ -655,6 +670,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const r = await apiFetch({ action:'getProgress', book, name:user }, 3);
     if (r.ok) {
       progressState = r.progress || { exp:0, level:1, monsters:{}, bosses:{} };
+      wrongBookMap = r.wrongBook || wrongBookMap || {};
       serverBaseMs = Number(r.serverNow || 0);
       perfBaseMs = performance.now();
     }
@@ -665,6 +681,113 @@ document.addEventListener('DOMContentLoaded', () => {
     const m = String(chapterStr).match(/(?:^|\s)(?:Chp|Bab)\s*([0-9]+)/i);
     return m ? parseInt(m[1],10) : null;
   }
+
+
+  function buildWrongId(row, q){
+    return [book, row[chapterKey]||'', row[labelKey]||'', row[sheetKey]||'', q.question||''].join('||');
+  }
+
+  function fireWrongBook(action, wrongId, row, q){
+    try {
+      fireGameAction({
+        action,
+        book,
+        name:user,
+        wrongId,
+        chapter: row ? (row[chapterKey] || '') : '',
+        label: row ? (row[labelKey] || '') : '',
+        sheet: row ? (row[sheetKey] || '') : '',
+        question: q ? (q.question || '') : '',
+        qtype: q ? (q.type || '') : '',
+        answer: q ? (q.answer || '') : '',
+        image: q ? (q.image || '') : '',
+        explain: q ? (q.explain || '') : '',
+        A: q ? (q.A || '') : '',
+        B: q ? (q.B || '') : '',
+        C: q ? (q.C || '') : '',
+        D: q ? (q.D || '') : '',
+        E: q ? (q.E || '') : '',
+        F: q ? (q.F || '') : '',
+        G: q ? (q.G || '') : '',
+        H: q ? (q.H || '') : ''
+      });
+    } catch(e) {}
+  }
+
+  async function showWrongBook(){
+    document.getElementById('chapters').style.display='none';
+    document.getElementById('quiz').style.display='none';
+    document.getElementById('finish').style.display='none';
+    document.getElementById('wrongBook').style.display='block';
+
+    const box = document.getElementById('wrongBookList');
+    box.innerHTML = '<p class="muted">正在加载错题本...</p>';
+
+    try {
+      const r = await apiFetch({ action:'getWrongBook', book, name:user }, 3);
+      if (!r.ok) throw new Error(r.error || 'load wrong book failed');
+      wrongBookMap = r.wrongBook || {};
+      const rows = Object.values(wrongBookMap);
+
+      if (!rows.length) {
+        box.innerHTML = '<p>🎉 目前没有错题！</p>';
+        return;
+      }
+
+      box.innerHTML = '';
+      rows.forEach(w => {
+        const item = document.createElement('div');
+        item.className = 'monster-item';
+        item.innerHTML = `<div class="title">
+          <div class="title-main">📝 ${escapeHtml(w.chapter || '')}${w.label ? ' — ' + escapeHtml(w.label) : ''}</div>
+          <div class="meta">${escapeHtml((w.question || '').slice(0, 100))}${(w.question||'').length>100?'...':''}<br>错误次数：${Number(w.wrongCount || 1)}</div>
+        </div>`;
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+        const btn = document.createElement('button');
+        btn.className = 'btn small';
+        btn.textContent = '重练';
+        btn.onclick = () => startWrongPractice(w);
+        actions.appendChild(btn);
+        item.appendChild(actions);
+        box.appendChild(item);
+      });
+    } catch(e) {
+      box.innerHTML = '<p class="muted">错题本加载失败，请稍后再试。</p>';
+    }
+  }
+
+  function startWrongPractice(w){
+    currentMode = 'wrongbook';
+    currentWrongId = w.wrongId || '';
+    currentRow = { [chapterKey]: w.chapter || '错题本', [labelKey]: w.label || '', [sheetKey]: w.sheet || '' };
+    qs = [{
+      title: w.label || '',
+      type: w.qtype || 'radio',
+      question: w.question || '',
+      answer: w.answer || '',
+      image: w.image || '',
+      explain: w.explain || '',
+      attempt:0,
+      A:w.A||'',B:w.B||'',C:w.C||'',D:w.D||'',E:w.E||'',F:w.F||'',G:w.G||'',H:w.H||''
+    }];
+    baseTotal = 1;
+    queue = [...qs];
+    score = correct = wrong = 0;
+    currentExpGain = 0;
+    chapterStart = 0;
+    clearBattleHp();
+    document.getElementById('wrongBook').style.display='none';
+    document.getElementById('chapters').style.display='none';
+    document.getElementById('finish').style.display='none';
+    document.getElementById('quiz').style.display='block';
+    document.getElementById('quiz-title').textContent = '错题重练';
+    document.getElementById('mode-badge').textContent = '模式：错题本';
+    updateUI(0);
+    nextQ();
+  }
+
 
   async function showChapterList(){
     document.getElementById('quiz').style.display = 'none';
@@ -1023,6 +1146,12 @@ document.addEventListener('DOMContentLoaded', () => {
         delta = isC ? (q.attempt?1:2) : (q.attempt?-2:-1);
       }
       score += delta; if (isC) correct++; else wrong++;
+      if (currentMode === 'wrongbook') {
+        if (isC) fireWrongBook('removeWrong', currentWrongId || buildWrongId(currentRow, q), currentRow, q);
+        else fireWrongBook('addWrong', currentWrongId || buildWrongId(currentRow, q), currentRow, q);
+      } else {
+        if (!isC) fireWrongBook('addWrong', buildWrongId(currentRow, q), currentRow, q);
+      }
       if (currentMode !== 'practice') {
         if (isC) {
           animatePlayerAttack(); wrongStreak = 0; correctStreak++;
@@ -1151,7 +1280,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 关键改动：下面所有怪兽 / Boss / EXP 更新全部改成 fire-and-forget。
     // 学生不用等这些动作完成；下次进入章节时再读取最新怪兽状态即可。
-    if (currentMode === 'monster') {
+    if (currentMode === 'wrongbook') {
+      exp = 0;
+      battleMsg = correct >= 1 ? '✅ 错题已答对，已从错题本移除。' : '❌ 仍需再练，这题会保留在错题本。';
+    } else if (currentMode === 'monster') {
       const kill = !battleEndedByDeath && accuracy >= 0.70;
       const perfect = !battleEndedByDeath && accuracy >= 0.90;
       if (kill) exp += 20;
@@ -1194,7 +1326,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentExpGain = exp;
     const quizIdForExp = currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey];
 
-    if (exp > 0) {
+    if (exp > 0 && currentMode !== 'wrongbook') {
       fireGameAction({ action:'addExp', book, name:user, quizId:quizIdForExp, amount:String(exp), reason:currentMode });
     }
 
@@ -1210,7 +1342,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('battle-result').textContent = battleMsg;
     document.getElementById('submit-status').textContent = '正在送出成绩…';
 
-    await submitScore(usedSeconds);
+    if (currentMode !== 'wrongbook') await submitScore(usedSeconds);
+    else document.getElementById('submit-status').textContent = '错题重练完成，不上传成绩。';
     refreshLatestProgressSoon();
 
     const ctrl=document.getElementById('controls'); ctrl.innerHTML='';
@@ -1230,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function modeLabel(m){
-    return m === 'practice' ? '普通练习' : (m === 'monster' ? '小怪挑战' : 'Boss挑战');
+    return m === 'practice' ? '普通练习' : (m === 'monster' ? '小怪挑战' : (m === 'wrongbook' ? '错题重练' : 'Boss挑战'));
   }
 
 
