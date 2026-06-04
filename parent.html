@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kee Quiz 学习记录</title>
+  <style>
+    :root {
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --primary:#2563eb;
+      --primary-soft:#eff6ff;
+      --good:#047857;
+      --good-bg:#ecfdf5;
+      --mid:#b45309;
+      --mid-bg:#fffbeb;
+      --low:#b91c1c;
+      --low-bg:#fef2f2;
+      --shadow:0 10px 30px rgba(15,23,42,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","Microsoft YaHei",sans-serif;
+      background:linear-gradient(180deg,#eef4ff 0,#f8fafc 240px,var(--bg) 240px);
+      color:var(--text);
+    }
+    a{color:inherit}
+    .wrap{max-width:1080px;margin:0 auto;padding:22px 16px 48px}
+    .hero{
+      background:rgba(255,255,255,.94);
+      border:1px solid rgba(255,255,255,.8);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      padding:24px;
+      margin-bottom:18px;
+    }
+    .hero-top{display:flex;gap:16px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+    h1{font-size:clamp(26px,4vw,38px);margin:0 0 6px}
+    h2{margin:0 0 12px;font-size:20px}
+    p{margin:0}
+    .muted{color:var(--muted)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{
+      border:0;border-radius:12px;padding:11px 16px;font-weight:700;
+      cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;
+      background:var(--primary);color:white;
+    }
+    .btn.secondary{background:white;color:var(--text);border:1px solid var(--line)}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .search-grid{
+      display:grid;grid-template-columns:1fr 220px;gap:12px;margin-top:20px
+    }
+    input,select{
+      width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;
+      background:white;font-size:16px;color:var(--text);outline:none
+    }
+    input:focus,select:focus{border-color:#93c5fd;box-shadow:0 0 0 4px rgba(59,130,246,.12)}
+    .layout{display:grid;grid-template-columns:320px 1fr;gap:18px;align-items:start}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px}
+    .student-list{max-height:70vh;overflow:auto;padding-right:4px}
+    .student-item{
+      width:100%;text-align:left;background:white;border:1px solid var(--line);border-radius:13px;
+      padding:12px 13px;margin-bottom:9px;cursor:pointer;transition:.15s;
+    }
+    .student-item:hover{border-color:#93c5fd;background:var(--primary-soft)}
+    .student-item.active{border-color:var(--primary);background:var(--primary-soft)}
+    .student-name{font-weight:800;margin-bottom:4px}
+    .student-meta{font-size:13px;color:var(--muted)}
+    .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+    .summary{
+      border:1px solid var(--line);border-radius:15px;padding:14px;background:#fff
+    }
+    .summary .label{font-size:13px;color:var(--muted);margin-bottom:6px}
+    .summary .value{font-size:22px;font-weight:850}
+    .history-list{display:grid;gap:12px}
+    .history-item{border:1px solid var(--line);border-radius:16px;padding:15px;background:#fff}
+    .history-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .quiz-title{font-weight:850;font-size:17px;line-height:1.4}
+    .book-tag{display:inline-flex;border-radius:999px;padding:4px 9px;background:var(--primary-soft);color:#1d4ed8;font-weight:800;font-size:12px}
+    .history-meta{margin-top:9px;display:flex;gap:8px 16px;flex-wrap:wrap;color:var(--muted);font-size:14px}
+    .accuracy{border-radius:999px;padding:6px 10px;font-weight:850;font-size:13px;white-space:nowrap}
+    .accuracy.good{background:var(--good-bg);color:var(--good)}
+    .accuracy.mid{background:var(--mid-bg);color:var(--mid)}
+    .accuracy.low{background:var(--low-bg);color:var(--low)}
+    .empty{padding:26px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+    .loading{padding:18px;text-align:center;color:var(--muted)}
+    .footer{text-align:center;color:var(--muted);font-size:13px;margin-top:22px}
+    @media (max-width:850px){
+      .layout{grid-template-columns:1fr}
+      .student-list{max-height:42vh}
+      .summary-grid{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (max-width:560px){
+      .search-grid{grid-template-columns:1fr}
+      .summary-grid{grid-template-columns:1fr 1fr}
+      .wrap{padding:14px 10px 36px}
+      .hero,.card{border-radius:16px;padding:15px}
+      .summary .value{font-size:19px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <h1>📘 Kee Quiz 学习记录</h1>
+          <p class="muted">选择学生后，可以查看每一次练习成绩与学习进度。</p>
+        </div>
+        <div class="actions">
+          <a class="btn secondary" href="index.html">返回练习网站</a>
+          <button class="btn" id="refreshBtn" type="button">更新记录</button>
+        </div>
+      </div>
+      <div class="search-grid">
+        <input id="searchInput" type="search" placeholder="搜索学生名字，例如：chong、lim、陈..." autocomplete="off" />
+        <select id="bookFilter">
+          <option value="">全部科目 / 年级</option>
+        </select>
+      </div>
+    </section>
+
+    <div class="layout">
+      <aside class="card">
+        <h2>学生名单</h2>
+        <div id="studentCount" class="muted" style="margin-bottom:12px;">正在加载...</div>
+        <div id="studentList" class="student-list">
+          <div class="loading">正在加载学生名单...</div>
+        </div>
+      </aside>
+
+      <main class="card">
+        <div id="recordTitle">
+          <h2>请选择学生</h2>
+          <p class="muted">点选左边的学生名字后，系统才会加载该学生的成绩记录。</p>
+        </div>
+
+        <div id="summaryGrid" class="summary-grid" style="display:none;"></div>
+        <div id="historyList" class="history-list" style="margin-top:16px;"></div>
+      </main>
+    </div>
+
+    <div class="footer">版本：2026.06.04.4</div>
+  </div>
+
+<script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwOadAK74XfAiOFkokD6zlQ8kQZTFDI0_SVWwMSSRgT8mwuoCac2VSAIj8X07L7NVVF/exec';
+  const APP_VERSION = '2026.06.04.4';
+
+  let students = [];
+  let selectedName = '';
+  let selectedBook = '';
+
+  const searchInput = document.getElementById('searchInput');
+  const bookFilter = document.getElementById('bookFilter');
+  const studentList = document.getElementById('studentList');
+  const studentCount = document.getElementById('studentCount');
+  const historyList = document.getElementById('historyList');
+  const summaryGrid = document.getElementById('summaryGrid');
+  const recordTitle = document.getElementById('recordTitle');
+
+  document.getElementById('refreshBtn').onclick = async () => {
+    selectedName = '';
+    await loadStudents();
+  };
+  searchInput.addEventListener('input', renderStudentList);
+  bookFilter.addEventListener('change', () => {
+    selectedBook = bookFilter.value;
+    renderStudentList();
+    if (selectedName) loadHistory(selectedName);
+  });
+
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function formatDuration(sec) {
+    const s = Math.max(0, Number(sec || 0));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const r = s % 60;
+    if (h) return `${h}小时 ${m}分`;
+    if (m) return `${m}分 ${r}秒`;
+    return `${r}秒`;
+  }
+
+  function formatDate(v) {
+    if (!v) return '-';
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return String(v);
+    return new Intl.DateTimeFormat('zh-CN', {
+      year:'numeric', month:'2-digit', day:'2-digit',
+      hour:'2-digit', minute:'2-digit'
+    }).format(d);
+  }
+
+  async function apiFetch(params) {
+    const u = new URL(SCRIPT_URL);
+    Object.entries({ ...params, v:APP_VERSION, _:Date.now() }).forEach(([k,v]) => u.searchParams.set(k, v == null ? '' : String(v)));
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20000);
+    try {
+      const res = await fetch(u.toString(), { cache:'no-store', credentials:'omit', signal:controller.signal });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function loadStudents() {
+    studentList.innerHTML = '<div class="loading">正在加载学生名单...</div>';
+    studentCount.textContent = '正在加载...';
+    recordTitle.innerHTML = '<h2>请选择学生</h2><p class="muted">点选学生名字后，才会加载该学生的每一次成绩记录。</p>';
+    historyList.innerHTML = '';
+    summaryGrid.style.display = 'none';
+
+    try {
+      const r = await apiFetch({ action:'getStudentNames' });
+      if (!r.ok) throw new Error(r.error || '读取失败');
+      students = Array.isArray(r.students) ? r.students : [];
+      buildBookFilter();
+      renderStudentList();
+    } catch(e) {
+      console.error(e);
+      studentList.innerHTML = '<div class="empty">学生名单加载失败，请稍后再试。</div>';
+      studentCount.textContent = '加载失败';
+    }
+  }
+
+  function buildBookFilter() {
+    const current = bookFilter.value;
+    const books = [...new Set(students.flatMap(s => s.books || []))].sort();
+    bookFilter.innerHTML = '<option value="">全部科目 / 年级</option>' +
+      books.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
+    if (books.includes(current)) bookFilter.value = current;
+  }
+
+  function renderStudentList() {
+    const q = searchInput.value.trim().toLowerCase();
+    const book = bookFilter.value;
+    const filtered = students.filter(s => {
+      const matchName = !q || String(s.name || '').toLowerCase().includes(q);
+      const matchBook = !book || (s.books || []).includes(book);
+      return matchName && matchBook;
+    });
+
+    studentCount.textContent = `共 ${filtered.length} 位学生`;
+    if (!filtered.length) {
+      studentList.innerHTML = '<div class="empty">没有找到学生。</div>';
+      return;
+    }
+
+    studentList.innerHTML = '';
+    filtered.forEach(s => {
+      const btn = document.createElement('button');
+      btn.className = 'student-item' + (selectedName === s.name ? ' active' : '');
+      btn.type = 'button';
+      btn.innerHTML = `
+        <div class="student-name">${escapeHtml(s.name)}</div>
+        <div class="student-meta">${escapeHtml((s.books || []).join(' · '))}｜记录 ${Number(s.attempts || 0)} 次</div>
+      `;
+      btn.onclick = () => {
+        selectedName = s.name;
+        renderStudentList();
+        loadHistory(s.name);
+      };
+      studentList.appendChild(btn);
+    });
+  }
+
+  async function loadHistory(name) {
+    recordTitle.innerHTML = `<h2>${escapeHtml(name)} 的学习记录</h2><p class="muted">以下会显示每一次完成练习的成绩。</p>`;
+    historyList.innerHTML = '<div class="loading">正在加载成绩记录...</div>';
+    summaryGrid.style.display = 'none';
+
+    try {
+      const r = await apiFetch({ action:'getStudentHistory', name, book:bookFilter.value, limit:1000 });
+      if (!r.ok) throw new Error(r.error || '读取失败');
+
+      renderSummary(r.summary || {});
+      renderHistory(r.rows || []);
+    } catch(e) {
+      console.error(e);
+      historyList.innerHTML = '<div class="empty">成绩记录加载失败，请稍后再试。</div>';
+    }
+  }
+
+  function renderSummary(s) {
+    summaryGrid.style.display = 'grid';
+    summaryGrid.innerHTML = `
+      <div class="summary"><div class="label">完成次数</div><div class="value">${Number(s.attempts || 0)}</div></div>
+      <div class="summary"><div class="label">不同练习</div><div class="value">${Number(s.uniqueQuiz || 0)}</div></div>
+      <div class="summary"><div class="label">平均第一次答对准确率</div><div class="value">${Number(s.avgAccuracy || 0)}%</div></div>
+      <div class="summary"><div class="label">总学习时间</div><div class="value">${formatDuration(s.totalTime || 0)}</div></div>
+    `;
+  }
+
+  function renderHistory(rows) {
+    if (!rows.length) {
+      historyList.innerHTML = '<div class="empty">目前没有成绩记录。</div>';
+      return;
+    }
+
+    historyList.innerHTML = rows.map(r => {
+      const acc = Number(r.FirstTryAccuracy || 0);
+      const cls = acc >= 90 ? 'good' : (acc >= 70 ? 'mid' : 'low');
+      const modeText = r.Mode === 'monster' ? '小怪挑战' : (r.Mode === 'boss' ? 'Boss挑战' : (r.Mode === 'practice' ? '普通练习' : r.Mode || '-'));
+      return `
+        <article class="history-item">
+          <div class="history-head">
+            <div>
+              <div class="quiz-title">${escapeHtml(r.QuizId || '-')}</div>
+              <div style="margin-top:6px"><span class="book-tag">${escapeHtml(r.Book || '-')}</span></div>
+            </div>
+            <div class="accuracy ${cls}">第一次答对准确率：${acc}%</div>
+          </div>
+          <div class="history-meta">
+            <span>📅 ${formatDate(r.Timestamp)}</span>
+            <span>✅ 答对 ${Number(r.Correct || 0)}</span>
+            <span>❌ 答错 ${Number(r.Wrong || 0)}</span>
+            <span>⏱️ ${formatDuration(r.Time || 0)}</span>
+            <span>🎮 ${escapeHtml(modeText)}</span>
+            <span>⚡ EXP +${Number(r.EXP || 0)}</span>
+          </div>
+        </article>
+      `;
+    }).join('');
+  }
+
+  loadStudents();
+</script>
+</body>
+</html>
