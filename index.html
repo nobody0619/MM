@@ -183,7 +183,7 @@
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.05.26.2</div>
+    <div class="version-tag" id="versionTag">版本：2026.06.04.1</div>
   </div>
 </div>
 
@@ -208,7 +208,7 @@
       <div class="pill" id="statBook">科目：-</div>
       <button id="topRulesBtn" class="btn ghost small" type="button">📜 游戏规则</button>
       <button id="topBoardBtn" class="btn ghost small" type="button">🏆 排行榜</button>
-      <button id="wrongBookBtn" class="btn ghost small" type="button">📝 错题本</button>
+      <button id="wrongBookBtn" class="btn ghost small" type="button">📝 错题本<span id="wrongBookCountBadge"></span></button>
       
     </div>
     <div class="muted" style="margin-top:8px;">背景颜色 / Theme</div>
@@ -225,7 +225,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.05.26.2</div>
+    <div class="version-tag">版本：2026.06.04.1</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -336,7 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.05.26.2';
+  const APP_VERSION = '2026.06.04.1';
+  const PENDING_SCORE_KEY = 'kee_pending_scores_v2';
   let serverBaseMs = 0;
   let perfBaseMs = 0;
   let deferredInstallPrompt = null;
@@ -395,6 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showChapterList();
   };
   setupThemeButtons();
+  setTimeout(() => retryPendingScoresInBackground(), 1200);
 
   document.getElementById('logoutBtn').onclick = () => {
     localStorage.removeItem(STORAGE_KEY);
@@ -540,6 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
       await loadChapters();
       try { await loadProgress(); } catch (_) { progressState = { exp:0, level:1, monsters:{}, bosses:{} }; }
       updateHeader();
+      refreshWrongBookCount();
       document.getElementById('login').style.display = 'none';
       showChapterList();
       msg.textContent = '';
@@ -711,7 +714,23 @@ document.addEventListener('DOMContentLoaded', () => {
         G: q ? (q.G || '') : '',
         H: q ? (q.H || '') : ''
       });
+      setTimeout(() => refreshWrongBookCount(), 1200);
     } catch(e) {}
+  }
+
+
+  async function refreshWrongBookCount(){
+    const badge = document.getElementById('wrongBookCountBadge');
+    if (!badge || !book || !user) return;
+    try {
+      const r = await apiFetch({ action:'getWrongBookCount', book, name:user }, 1);
+      if (r && r.ok) {
+        const n = Number(r.count || 0);
+        badge.textContent = n > 0 ? `（${n}）` : '';
+      }
+    } catch(e) {
+      // 错题数只是辅助显示，失败时不影响页面。
+    }
   }
 
   async function showWrongBook(){
@@ -727,6 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const r = await apiFetch({ action:'getWrongBook', book, name:user }, 3);
       if (!r.ok) throw new Error(r.error || 'load wrong book failed');
       wrongBookMap = r.wrongBook || {};
+      refreshWrongBookCount();
       const rows = Object.values(wrongBookMap);
 
       if (!rows.length) {
@@ -1472,49 +1492,90 @@ document.addEventListener('DOMContentLoaded', () => {
       expGained: currentExpGain
     };
 
-    document.getElementById('submit-status').textContent = '正在送出成绩...';
-    setLoading(true, '正在送出成绩...');
+    // 先保存在本机，直到后台确认进入 SubmitQueue 才删除。
+    savePendingScore(payload);
 
+    document.getElementById('submit-status').textContent = '✅ 成绩已送出（后台处理中）';
+
+    // 立即送出，不等待，不阻塞学生。
+    submitQueueBeacon(payload);
+
+    // 背景自动确认 / 补交：2秒、5秒、10秒。
+    schedulePendingScoreRetries(payload.submitId);
+  }
+
+  function readPendingScores(){
     try {
-      const sent = submitQueueBeacon(payload);
-      if (!sent) throw new Error('send failed');
-
-      await new Promise(resolve => setTimeout(resolve, 80));
-      document.getElementById('submit-status').textContent = '✅ 成绩已送出（后台处理中）';
+      const arr = JSON.parse(localStorage.getItem(PENDING_SCORE_KEY) || '[]');
+      return Array.isArray(arr) ? arr : [];
     } catch(e) {
-      console.error(e);
-      savePendingScore(payload);
-      document.getElementById('submit-status').innerHTML = '⚠️ 成绩暂存在本机。请点“补交成绩”或截图给老师。 <button class="btn small secondary" onclick="window.retryPendingScores && window.retryPendingScores()">补交成绩</button>';
-    } finally {
-      setLoading(false);
+      return [];
     }
   }
 
-  function savePendingScore(payload){
+  function writePendingScores(arr){
     try {
-      const key = 'kee_pending_scores_v1';
-      const arr = JSON.parse(localStorage.getItem(key) || '[]');
-      arr.push(payload);
-      localStorage.setItem(key, JSON.stringify(arr.slice(-20)));
+      localStorage.setItem(PENDING_SCORE_KEY, JSON.stringify((arr || []).slice(-60)));
     } catch(e) {}
   }
 
+  function savePendingScore(payload){
+    const arr = readPendingScores();
+    const id = String(payload.submitId || '');
+    if (!id) return;
+    const idx = arr.findIndex(x => String(x.submitId || '') === id);
+    if (idx >= 0) arr[idx] = payload;
+    else arr.push(payload);
+    writePendingScores(arr);
+  }
+
+  function removePendingScore(submitId){
+    const id = String(submitId || '');
+    if (!id) return;
+    const arr = readPendingScores().filter(x => String(x.submitId || '') !== id);
+    writePendingScores(arr);
+  }
+
+  async function confirmOrResubmitPending(payload){
+    try {
+      const r = await apiFetch({ ...payload, action:'submitToQueue' }, 1);
+      if (r && r.ok) {
+        removePendingScore(payload.submitId);
+        return true;
+      }
+    } catch(e) {}
+    return false;
+  }
+
+  function schedulePendingScoreRetries(submitId){
+    const delays = [2000, 5000, 10000];
+    delays.forEach(delay => {
+      setTimeout(async () => {
+        const payload = readPendingScores().find(x => String(x.submitId || '') === String(submitId || ''));
+        if (!payload) return;
+        await confirmOrResubmitPending(payload);
+      }, delay);
+    });
+  }
+
+  async function retryPendingScoresInBackground(){
+    const arr = readPendingScores();
+    if (!arr.length) return;
+    for (const payload of arr) {
+      await confirmOrResubmitPending(payload);
+    }
+  }
+
   window.retryPendingScores = async function(){
-    const key = 'kee_pending_scores_v1';
-    let arr = [];
-    try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { arr = []; }
+    const arr = readPendingScores();
     if (!arr.length) return alert('没有待补交成绩。');
     setLoading(true, '正在补交成绩...');
     let okCount = 0;
-    for (const item of arr) {
-      try {
-        if (submitQueueBeacon({ ...item, action:'submitToQueue' })) okCount++;
-      } catch(e) {}
+    for (const payload of arr) {
+      if (await confirmOrResubmitPending(payload)) okCount++;
     }
-    localStorage.removeItem(key);
-    await new Promise(resolve => setTimeout(resolve, 80));
     setLoading(false);
-    alert(`补交完成：已送出 ${okCount} 份`);
+    alert(`补交完成：成功 ${okCount}，剩余 ${readPendingScores().length}`);
   }
 
   function daysLeft(ts){
