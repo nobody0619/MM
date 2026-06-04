@@ -170,6 +170,7 @@
       <button id="rulesBtn" class="btn ghost" type="button">📜 游戏规则</button>
       <button id="refreshBtn" class="btn ghost" type="button">🔄 更新页面</button>
       <button id="installBtn" class="btn ghost" type="button">📲 加入手机首页</button>
+      <a class="btn ghost" href="parent.html" target="_blank" rel="noopener">👨‍👩‍👧 学习记录</a>
     </div>
     <div class="theme-panel" id="themePanelLogin">
       <button class="theme-dot" data-theme="soft">白色</button>
@@ -183,7 +184,7 @@
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.06.04.3</div>
+    <div class="version-tag" id="versionTag">版本：2026.06.04.4</div>
   </div>
 </div>
 
@@ -209,6 +210,7 @@
       <button id="topRulesBtn" class="btn ghost small" type="button">📜 游戏规则</button>
       <button id="topBoardBtn" class="btn ghost small" type="button">🏆 排行榜</button>
       <button id="wrongBookBtn" class="btn ghost small" type="button">📝 错题本<span id="wrongBookCountBadge"></span></button>
+      <a class="btn ghost small" href="parent.html" target="_blank" rel="noopener">👨‍👩‍👧 学习记录</a>
       
     </div>
     <div class="muted" style="margin-top:8px;">背景颜色 / Theme</div>
@@ -225,7 +227,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.06.04.3</div>
+    <div class="version-tag">版本：2026.06.04.4</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -336,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.06.04.3';
+  const APP_VERSION = '2026.06.04.4';
   const PENDING_SCORE_KEY = 'kee_pending_scores_v2';
   let serverBaseMs = 0;
   let perfBaseMs = 0;
