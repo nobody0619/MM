@@ -183,7 +183,7 @@
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.06.04.1</div>
+    <div class="version-tag" id="versionTag">版本：2026.06.04.3</div>
   </div>
 </div>
 
@@ -225,7 +225,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.06.04.1</div>
+    <div class="version-tag">版本：2026.06.04.3</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -336,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.06.04.1';
+  const APP_VERSION = '2026.06.04.3';
   const PENDING_SCORE_KEY = 'kee_pending_scores_v2';
   let serverBaseMs = 0;
   let perfBaseMs = 0;
@@ -368,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let wrongBookMap = {};
   let currentWrongId = '';
   let countCache = new Map();
+  let questionCountCacheLoaded = false;
   let monsterQuestionCache = new Map();
   let progressState = { exp:0, level:1, monsters:{}, bosses:{} };
 
@@ -540,9 +541,10 @@ document.addEventListener('DOMContentLoaded', () => {
       user = normalizeName(nm);
       saveAuth(displayUser, pwd);
       await loadChapters();
+      registerQuestionSourcesInBackground();
+      try { await loadQuestionCountCache(); } catch (_) {}
       try { await loadProgress(); } catch (_) { progressState = { exp:0, level:1, monsters:{}, bosses:{} }; }
       updateHeader();
-      refreshWrongBookCount();
       document.getElementById('login').style.display = 'none';
       showChapterList();
       msg.textContent = '';
@@ -852,19 +854,69 @@ document.addEventListener('DOMContentLoaded', () => {
     return [book, row[chapterKey]||'', row[labelKey]||'', row[sheetKey]||''].join('||');
   }
 
+
+  function absoluteQuestionUrl(url){
+    try { return new URL(String(url || ''), location.href).href; }
+    catch(e) { return String(url || ''); }
+  }
+
+  function registerQuestionSourcesInBackground(){
+    try {
+      if (!rows.length || !chapterKey || !labelKey || !sheetKey) return;
+      const sources = rows.map(r => ({
+        quizId: r[chapterKey] || '',
+        label: r[labelKey] || '',
+        sheetURL: absoluteQuestionUrl(r[sheetKey] || '')
+      })).filter(x => x.quizId && x.sheetURL);
+
+      const body = new URLSearchParams({
+        action:'registerQuestionSources',
+        book,
+        sources:JSON.stringify(sources),
+        v:APP_VERSION
+      });
+
+      fetch(SCRIPT_URL, {
+        method:'POST',
+        body,
+        mode:'no-cors',
+        keepalive:true,
+        credentials:'omit',
+        cache:'no-store'
+      }).catch(()=>{});
+    } catch(e) {}
+  }
+
+  async function loadQuestionCountCache(){
+    try {
+      const r = await apiFetch({ action:'getQuestionCounts', book }, 1);
+      if (r && r.ok && r.counts) {
+        Object.entries(r.counts).forEach(([url, count]) => {
+          countCache.set(String(url), Number(count || 0));
+        });
+        questionCountCacheLoaded = true;
+      }
+    } catch(e) {
+      questionCountCacheLoaded = false;
+    }
+  }
+
   async function getQuestionCount(url){
-    if (countCache.has(url)) return countCache.get(url);
+    const key = absoluteQuestionUrl(url);
+    if (countCache.has(key)) return countCache.get(key);
+
+    // QuestionCounts 还没有这份题库时，才临时读取 CSV。
     const cnt = await new Promise(resolve => {
-      Papa.parse(url, {
+      Papa.parse(addCacheBuster(url), {
         download:true, header:true, skipEmptyLines:true,
         complete(r2){
-          const c = r2.data.filter(q => q.question && String(q.question).trim()).length;
+          const c = (r2.data || []).filter(q => q.question && String(q.question).trim()).length;
           resolve(c);
         },
         error(){ resolve(0); }
       });
     });
-    countCache.set(url, cnt);
+    countCache.set(key, cnt);
     return cnt;
   }
 
@@ -1292,7 +1344,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const quizEndTime = Date.now();
     const usedSeconds = chapterStart ? Math.floor((quizEndTime - chapterStart)/1000) : 0;
-    const accuracy = baseTotal ? Math.min(1, correct / baseTotal) : 0;
+    // 第一次答对准确率：
+    // correct 包含后来增加的重复题答对次数；每次答错会增加 2 题。
+    // 第一次就答对题数 = correct - 2 × wrong
+    // 原本题数 = correct - wrong
+    const firstTryCorrect = Math.max(0, correct - 2 * wrong);
+    const originalTotal = Math.max(1, correct - wrong);
+    const accuracy = Math.max(0, Math.min(1, firstTryCorrect / originalTotal));
     const accuracyPct = Math.round(accuracy * 100);
     let battleMsg = '';
     let exp = 10;
@@ -1358,7 +1416,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateHeader(Number(progressState.level || 1));
 
     document.getElementById('finish-msg').textContent = `恭喜 ${displayUser || user}，本次完成！`;
-    document.getElementById('stats').textContent = `模式：${modeLabel(currentMode)}｜得分: ${score}｜正确率: ${accuracyPct}%｜答对 ${correct} 题｜答错 ${wrong} 题｜用时：${formatDuration(usedSeconds)}｜EXP +${currentExpGain}`;
+    document.getElementById('stats').textContent = `模式：${modeLabel(currentMode)}｜得分: ${score}｜第一次答对准确率: ${accuracyPct}%｜答对 ${correct} 题｜答错 ${wrong} 题｜用时：${formatDuration(usedSeconds)}｜EXP +${currentExpGain}`;
     document.getElementById('battle-result').textContent = battleMsg;
     document.getElementById('submit-status').textContent = '正在送出成绩…';
 
