@@ -180,11 +180,11 @@
       <button class="theme-dot" data-theme="dark">Dark</button>
     </div>
     <p id="loginMsg" class="muted"></p>
-    <p class="hint">章节会先显示，怪兽状态、错题数与题数会在后台自动补上。若不能登入，请点“更新页面”或用 Chrome / Safari 打开。提交成绩时也需要一点时间，请不要马上关闭页面。</p>
+    <p class="hint">章节会先显示；学生可先做练习，怪兽状态、错题数与题数会稍后后台补上。若不能登入，请点“更新页面”或用 Chrome / Safari 打开。提交成绩时也需要一点时间，请不要马上关闭页面。</p>
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.06.04.7</div>
+    <div class="version-tag" id="versionTag">版本：2026.06.04.8</div>
   </div>
 </div>
 
@@ -227,7 +227,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.06.04.7</div>
+    <div class="version-tag">版本：2026.06.04.8</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.06.04.7';
+  const APP_VERSION = '2026.06.04.8';
   const PENDING_SCORE_KEY = 'kee_pending_scores_v2';
   let serverBaseMs = 0;
   let perfBaseMs = 0;
@@ -375,6 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let monsterQuestionCache = new Map();
   let progressState = { exp:0, level:1, monsters:{}, bosses:{} };
   let progressLoadingPromise = null;
+  let isStartingQuiz = false;
 
   ensureLatestVersion_();
 
@@ -553,10 +554,16 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('login').style.display = 'none';
       showChapterList();
 
-      // 全部改成后台补上，不阻塞登入。
-      loadProgressInBackground();
-      loadQuestionCountCacheInBackground();
-      setTimeout(() => refreshWrongBookCount(), 300);
+      // 先让学生选练习；怪兽状态、题数、错题数稍后才后台补上，避免和题库加载抢网络。
+      setTimeout(() => {
+        if (!isStartingQuiz) loadProgressInBackground();
+      }, 5000);
+      setTimeout(() => {
+        if (!isStartingQuiz) loadQuestionCountCacheInBackground();
+      }, 6500);
+      setTimeout(() => {
+        if (!isStartingQuiz) refreshWrongBookCount();
+      }, 8000);
 
       msg.textContent = '';
     } catch (e) {
@@ -698,8 +705,10 @@ document.addEventListener('DOMContentLoaded', () => {
     progressLoadingPromise = loadProgress()
       .then(() => {
         updateHeader();
-        // 怪兽与 Boss 状态加载完成后，重新绘制章节卡片。
-        if (document.getElementById('chapters').style.display !== 'none') {
+        // 只有在学生仍停留在章节页时才刷新卡片；避免学生刚点练习时被重绘打断。
+        const quizOpen = document.getElementById('quiz').style.display !== 'none';
+        const chaptersOpen = document.getElementById('chapters').style.display !== 'none';
+        if (!isStartingQuiz && !quizOpen && chaptersOpen) {
           showChapterList();
         }
         return true;
@@ -843,6 +852,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   async function showChapterList(){
+    isStartingQuiz = false;
     document.getElementById('quiz').style.display = 'none';
     document.getElementById('finish').style.display = 'none';
     const wrap = document.getElementById('chapterWrap');
@@ -1040,12 +1050,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function startQuiz(row, mode){
+    isStartingQuiz = true;
     if (mode === 'monster') {
       setLoading(true, '正在检查小怪状态，请稍等...');
       try {
         const guard = await apiFetch({ action:'canStartBattle', book, name:user, type:'monster', monsterId:buildMonsterId(row) }, 3);
         if (!guard.ok || !guard.canStart) {
           setLoading(false);
+          isStartingQuiz = false;
           alert(guard.error || '这只小怪还没有复活，不能重复挑战。');
           await loadProgress();
           updateHeader();
@@ -1053,6 +1065,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch(e) {
         setLoading(false);
+        isStartingQuiz = false;
         alert('连接验证失败，请点“更新页面”后再试。');
         return;
       }
@@ -1072,6 +1085,7 @@ document.addEventListener('DOMContentLoaded', () => {
     qs = await loadQuestionsReliable(row[sheetKey], 4);
     if (!qs.length) {
       setLoading(false);
+      isStartingQuiz = false;
       alert('题库暂时没有成功加载，请等几秒后再按一次。系统不会提交空成绩。');
       clearBattleHp();
       return showChapterList();
@@ -1087,6 +1101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('quiz').style.display = 'block';
     updateUI(0);
     setLoading(false);
+    isStartingQuiz = false;
     nextQ();
   }
 
