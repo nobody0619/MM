@@ -17,7 +17,7 @@
     #chapters,#quiz,#finish{display:none}
     .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 4px 16px rgba(0,0,0,.04)}
     .floating-back{position:sticky;top:10px;left:0;text-align:left;z-index:5;margin-bottom:10px}
-    .floating-back button,.btn{padding:10px 14px;border-radius:999px;border:0;background:#111827;color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;font:inherit;line-height:1.2}
+    .floating-back button,.btn{padding:10px 14px;border-radius:999px;border:0;background:#111827;color:#fff;cursor:pointer}
     .btn.secondary{background:#fff;color:#111827;border:1px solid #111827}
     .btn.ghost{background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe}
     .btn.boss{background:var(--boss)}
@@ -46,10 +46,10 @@
     #topbar .left{text-align:left}
     progress{width:100%;height:18px}
     .question{text-align:left;margin:15px 0;padding-left:6px}
-    .option-label{display:block;margin:6px 0;cursor:pointer;padding:8px;border-radius:10px}
+    .option-label{display:flex;align-items:flex-start;gap:8px;margin:6px 0;cursor:pointer;padding:8px;border-radius:10px;text-align:left;line-height:1.45;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
     .option-label:hover{background:#f3f4f6}
     .feedback{font-weight:bold;margin:12px 0;line-height:1.6}
-    input[type="radio"],input[type="checkbox"]{transform:scale(1.2);margin-right:8px}
+    input[type="radio"],input[type="checkbox"]{transform:scale(1.2);margin:3px 2px 0 0;flex:0 0 auto}.option-text{display:inline-block;min-width:0;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
     img{max-width:100%;margin:10px 0;border:2px solid #ccc;border-radius:10px}
     #submit-status{margin-top:10px;font-size:14px}
     .muted{color:var(--muted)}
@@ -162,15 +162,14 @@
 <div id="login" class="login-wrap">
   <div class="card">
     <h2 id="loginTitle"></h2>
-    <p class="muted">请输入姓名和每月密码</p>
+    <p class="muted">请输入姓名和每每月密码</p>
     <input type="text" id="username" placeholder="姓名 / Name"/>
-    <input type="password" id="monthPassword" placeholder="每月密码 / Monthly Password"/>
+    <input type="password" id="monthPassword" placeholder="每每月密码 / Monthly Password"/>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
       <button id="startBtn" class="btn" type="button">进入 / Start</button>
       <button id="rulesBtn" class="btn ghost" type="button">📜 游戏规则</button>
       <button id="refreshBtn" class="btn ghost" type="button">🔄 更新页面</button>
       <button id="installBtn" class="btn ghost" type="button">📲 加入手机首页</button>
-      <a class="btn ghost" href="parent.html" target="_blank" rel="noopener">👨‍👩‍👧 家长查询</a>
     </div>
     <div class="theme-panel" id="themePanelLogin">
       <button class="theme-dot" data-theme="soft">白色</button>
@@ -180,11 +179,11 @@
       <button class="theme-dot" data-theme="dark">Dark</button>
     </div>
     <p id="loginMsg" class="muted"></p>
-    <p class="hint">章节会先显示；学生可先做练习，怪兽状态、错题数与题数会稍后后台补上。若不能登入，请点“更新页面”或用 Chrome / Safari 打开。提交成绩时也需要一点时间，请不要马上关闭页面。</p>
+    <p class="hint">登入会先进入章节；题数和怪兽状态会在后台补上。第一次做某份练习会缓存题库，之后会更快。</p>
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.06.04.8</div>
+    <div class="version-tag" id="versionTag">版本：2026.06.09.8</div>
   </div>
 </div>
 
@@ -209,8 +208,7 @@
       <div class="pill" id="statBook">科目：-</div>
       <button id="topRulesBtn" class="btn ghost small" type="button">📜 游戏规则</button>
       <button id="topBoardBtn" class="btn ghost small" type="button">🏆 排行榜</button>
-      <button id="wrongBookBtn" class="btn ghost small" type="button">📝 错题本<span id="wrongBookCountBadge"></span></button>
-      <a class="btn ghost small" href="parent.html" target="_blank" rel="noopener">👨‍👩‍👧 家长查询</a>
+      <button id="wrongBookBtn" class="btn ghost small" type="button">📝 错题本</button>
       
     </div>
     <div class="muted" style="margin-top:8px;">背景颜色 / Theme</div>
@@ -227,7 +225,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.06.04.8</div>
+    <div class="version-tag">版本：2026.06.09.8</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -282,7 +280,7 @@
 <form id="postForm"
       action="https://script.google.com/macros/s/AKfycbwOadAK74XfAiOFkokD6zlQ8kQZTFDI0_SVWwMSSRgT8mwuoCac2VSAIj8X07L7NVVF/exec"
       method="post" target="postFrame" style="display:none;">
-  <input name="action" value="submitScoreFast"/>
+  <input name="action" value="submitToQueue"/>
   <input name="submitId"/>
   <input name="book"/>
   <input name="quizId"/><input name="name"/><input name="score"/>
@@ -338,8 +336,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.06.04.8';
-  const PENDING_SCORE_KEY = 'kee_pending_scores_v2';
+  const APP_VERSION = '2026.06.09.8';
+  const SKIP_SERVER_LOGIN = true; // 紧急稳定模式：登入不等待 Apps Script，避免学生卡在登入
+  const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
+  const QUESTION_CACHE_DAYS = 30;
   let serverBaseMs = 0;
   let perfBaseMs = 0;
   let deferredInstallPrompt = null;
@@ -370,12 +370,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let wrongBookMap = {};
   let currentWrongId = '';
   let countCache = new Map();
-  let questionCountCacheLoaded = false;
-  let questionCountLoadingPromise = null;
   let monsterQuestionCache = new Map();
   let progressState = { exp:0, level:1, monsters:{}, bosses:{} };
-  let progressLoadingPromise = null;
-  let isStartingQuiz = false;
 
   ensureLatestVersion_();
 
@@ -402,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
     showChapterList();
   };
   setupThemeButtons();
-  setTimeout(() => retryPendingScoresInBackground(), 1200);
 
   document.getElementById('logoutBtn').onclick = () => {
     localStorage.removeItem(STORAGE_KEY);
@@ -536,39 +531,51 @@ document.addEventListener('DOMContentLoaded', () => {
     const nm = document.getElementById('username').value.trim();
     const pwd = document.getElementById('monthPassword').value.trim();
     const msg = document.getElementById('loginMsg');
-    if (!nm || !pwd) return msg.textContent = '请输入姓名和每月密码';
-    msg.textContent = '正在验证...';
-    setLoading(true, '正在验证每月密码，请稍等...');
+
+    if (!nm || !pwd) return msg.textContent = '请输入姓名和每每月密码';
+
+    msg.textContent = '正在加载章节...';
+    setLoading(true, '正在加载章节，请稍等...');
+
     try {
-      const r = await apiFetch({ action:'checkPassword', book, name:nm, password:pwd, ua:getUserAgent() }, 1);
-      if (!r.ok) { msg.textContent = explainLoginError(r.error || '验证失败'); return; }
+      // 紧急稳定模式：不等待 Apps Script 验证，先让学生进入练习。
+      // 这样可以避开 Apps Script 慢 / 手机网络慢导致的登入卡死。
+      if (!SKIP_SERVER_LOGIN) {
+        const r = await apiFetch({ action:'checkPassword', book, name:nm, password:pwd, ua:getUserAgent() }, 1);
+        if (!r.ok) { msg.textContent = explainLoginError(r.error || '验证失败'); return; }
+      }
+
       displayUser = nm;
       user = normalizeName(nm);
       saveAuth(displayUser, pwd);
-      await loadChapters();
-      registerQuestionSourcesInBackground();
 
-      // 验证成功后先显示章节，不等待等级、怪兽、Boss、错题数与题数资料。
+      await loadChapters();
+
+      // 先显示章节，不等等级、怪兽、Boss、错题本、题数。
       progressState = { exp:0, level:1, monsters:{}, bosses:{} };
       updateHeader();
+
       document.getElementById('login').style.display = 'none';
       showChapterList();
-
-      // 先让学生选练习；怪兽状态、题数、错题数稍后才后台补上，避免和题库加载抢网络。
-      setTimeout(() => {
-        if (!isStartingQuiz) loadProgressInBackground();
-      }, 5000);
-      setTimeout(() => {
-        if (!isStartingQuiz) loadQuestionCountCacheInBackground();
-      }, 6500);
-      setTimeout(() => {
-        if (!isStartingQuiz) refreshWrongBookCount();
-      }, 8000);
-
       msg.textContent = '';
+
+      // 题数从 Sheet 后台直接补上；题库也后台预载几份，学生点练习会更快。
+      setTimeout(() => loadQuestionCountsFromSheet(), 600);
+      setTimeout(() => preloadVisibleQuestionBanks(), 1500);
+
+      // 后台慢慢补上怪兽状态，不阻塞学生做练习。
+      setTimeout(() => {
+        loadProgress()
+          .then(() => {
+            updateHeader();
+            if (document.getElementById('chapters').style.display !== 'none') showChapterList();
+          })
+          .catch(()=>{});
+      }, 2500);
+
     } catch (e) {
       console.error(e);
-      msg.textContent = '连接验证失败，请刷新页面后重试；若还是不行，请改用 Chrome / Safari 打开。';
+      msg.textContent = '章节加载失败，请点“更新页面”再试。';
     } finally {
       setLoading(false);
     }
@@ -585,9 +592,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function explainLoginError(errMsg){
     const s = String(errMsg || '');
-    if (s.includes('每月密码错误') || s.includes('有效日期')) return '密码不对，或当前日期不在有效期内。请再检查一次。';
-    if (s.includes('Missing')) return '请输入姓名和每月密码。';
-    if (s.includes('empty')) return '系统里还没有每月密码资料，请联络老师。';
+    if (s.includes('每每月密码错误') || s.includes('有效日期')) return '密码不对，或当前日期不在有效期内。请再检查一次。';
+    if (s.includes('Missing')) return '请输入姓名和每每月密码。';
+    if (s.includes('empty')) return '系统里还没有每每月密码资料，请联络老师。';
     return '连接验证失败，请刷新后重试；若还是不行，请改用 Chrome / Safari，或联络老师。';
   }
 
@@ -662,14 +669,57 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  function addCacheBuster(url){
-    const sep = String(url).includes('?') ? '&' : '?';
-    return String(url) + sep + '_cache=' + Date.now();
+  function absoluteUrl(url){
+    try { return new URL(String(url || ''), location.href).href; }
+    catch(e) { return String(url || ''); }
   }
 
-  function parseCsvOnce(url){
+  function questionCacheKey(url){
+    let s = absoluteUrl(url);
+    let h = 0;
+    for (let i=0;i<s.length;i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+    return QUESTION_CACHE_PREFIX + Math.abs(h).toString(36);
+  }
+
+  function readQuestionCache(url){
+    try {
+      const raw = localStorage.getItem(questionCacheKey(url));
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (!obj || !Array.isArray(obj.list)) return null;
+      const age = Date.now() - Number(obj.savedAt || 0);
+      if (age > QUESTION_CACHE_DAYS * 24 * 60 * 60 * 1000) return null;
+      return obj.list.map(q => ({...q, attempt:0}));
+    } catch(e) {
+      return null;
+    }
+  }
+
+  function saveQuestionCache(url, list){
+    try {
+      const small = (list || []).map(q => {
+        const out = {};
+        Object.keys(q || {}).forEach(k => {
+          if (k !== 'attempt') out[k] = q[k];
+        });
+        return out;
+      });
+      localStorage.setItem(questionCacheKey(url), JSON.stringify({ savedAt:Date.now(), list:small }));
+    } catch(e) {
+      // 手机 storage 满时，自动清理旧题库缓存一次。
+      try {
+        Object.keys(localStorage).forEach(k => {
+          if (k.startsWith(QUESTION_CACHE_PREFIX)) localStorage.removeItem(k);
+        });
+      } catch(_) {}
+    }
+  }
+
+  function parseCsvOnce(url, noCache=false){
+    // 不再每次加 Date.now()，否则每次点练习都会强制重新下载 CSV，手机会很慢。
+    const finalUrl = noCache ? String(url) + (String(url).includes('?') ? '&' : '?') + '_reload=' + Date.now() : String(url);
     return new Promise(resolve => {
-      Papa.parse(addCacheBuster(url), {
+      Papa.parse(finalUrl, {
         download:true, header:true, skipEmptyLines:true,
         complete(res){
           const list = (res.data || []).map(q => ({...q, attempt:0})).filter(q => q.question && String(q.question).trim());
@@ -680,14 +730,60 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  async function loadQuestionsReliable(url, tries=4){
+  async function loadQuestionsReliable(url, tries=2){
+    // 1. 先读本机缓存，最快。
+    const cached = readQuestionCache(url);
+    if (cached && cached.length) return cached;
+
+    // 2. 第一次不用 cache buster，让浏览器 / GitHub Pages / Google CSV 自己缓存。
     for (let i=0;i<tries;i++){
-      const list = await parseCsvOnce(url);
-      if (list.length) return list;
-      await new Promise(r => setTimeout(r, 650 + i * 450));
+      const list = await parseCsvOnce(url, i > 0);
+      if (list.length) {
+        saveQuestionCache(url, list);
+        return list.map(q => ({...q, attempt:0}));
+      }
+      await new Promise(r => setTimeout(r, 450 + i * 350));
     }
     return [];
   }
+
+  function preloadVisibleQuestionBanks(){
+    // 章节显示后，等学生看页面时静静预载前几份题库；学生点进去会快很多。
+    try {
+      const urls = [];
+      for (const r of rows) {
+        const u = r[sheetKey];
+        if (u && !readQuestionCache(u) && !urls.includes(u)) urls.push(u);
+        if (urls.length >= 4) break;
+      }
+      urls.forEach((u, i) => {
+        setTimeout(() => loadQuestionsReliable(u, 1).catch(()=>{}), 1200 + i * 1200);
+      });
+    } catch(e) {}
+  }
+
+  async function loadQuestionCountsFromSheet(){
+    // 题数只拿来显示，不影响学生选练习。
+    try {
+      const r = await apiFetch({ action:'getQuestionCounts', book }, 0);
+      if (!r || !r.ok || !r.counts) return;
+      Object.entries(r.counts).forEach(([url, count]) => countCache.set(absoluteUrl(url), Number(count || 0)));
+      updateQuestionCountDisplay();
+    } catch(e) {}
+  }
+
+  function updateQuestionCountDisplay(){
+    try {
+      for (const row of rows) {
+        const monsterId = buildMonsterId(row);
+        const el = document.getElementById('count_' + hashId(monsterId));
+        if (!el) continue;
+        const key = absoluteUrl(row[sheetKey]);
+        if (countCache.has(key)) el.textContent = String(countCache.get(key));
+      }
+    } catch(e) {}
+  }
+
 
   async function loadProgress(){
     const r = await apiFetch({ action:'getProgress', book, name:user }, 3);
@@ -697,28 +793,6 @@ document.addEventListener('DOMContentLoaded', () => {
       serverBaseMs = Number(r.serverNow || 0);
       perfBaseMs = performance.now();
     }
-  }
-
-  function loadProgressInBackground(){
-    if (progressLoadingPromise) return progressLoadingPromise;
-
-    progressLoadingPromise = loadProgress()
-      .then(() => {
-        updateHeader();
-        // 只有在学生仍停留在章节页时才刷新卡片；避免学生刚点练习时被重绘打断。
-        const quizOpen = document.getElementById('quiz').style.display !== 'none';
-        const chaptersOpen = document.getElementById('chapters').style.display !== 'none';
-        if (!isStartingQuiz && !quizOpen && chaptersOpen) {
-          showChapterList();
-        }
-        return true;
-      })
-      .catch(() => false)
-      .finally(() => {
-        progressLoadingPromise = null;
-      });
-
-    return progressLoadingPromise;
   }
 
   function getMainChapterNo(chapterStr){
@@ -756,23 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
         G: q ? (q.G || '') : '',
         H: q ? (q.H || '') : ''
       });
-      setTimeout(() => refreshWrongBookCount(), 1200);
     } catch(e) {}
-  }
-
-
-  async function refreshWrongBookCount(){
-    const badge = document.getElementById('wrongBookCountBadge');
-    if (!badge || !book || !user) return;
-    try {
-      const r = await apiFetch({ action:'getWrongBookCount', book, name:user }, 1);
-      if (r && r.ok) {
-        const n = Number(r.count || 0);
-        badge.textContent = n > 0 ? `（${n}）` : '';
-      }
-    } catch(e) {
-      // 错题数只是辅助显示，失败时不影响页面。
-    }
   }
 
   async function showWrongBook(){
@@ -788,7 +846,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const r = await apiFetch({ action:'getWrongBook', book, name:user }, 3);
       if (!r.ok) throw new Error(r.error || 'load wrong book failed');
       wrongBookMap = r.wrongBook || {};
-      refreshWrongBookCount();
       const rows = Object.values(wrongBookMap);
 
       if (!rows.length) {
@@ -852,7 +909,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   async function showChapterList(){
-    isStartingQuiz = false;
     document.getElementById('quiz').style.display = 'none';
     document.getElementById('finish').style.display = 'none';
     const wrap = document.getElementById('chapterWrap');
@@ -888,100 +944,28 @@ document.addEventListener('DOMContentLoaded', () => {
       wrap.appendChild(g);
     }
     document.getElementById('chapters').style.display = 'block';
+    updateQuestionCountDisplay();
     focusLastCard();
-    loadQuestionCountCacheInBackground();
   }
 
   function buildMonsterId(row){
     return [book, row[chapterKey]||'', row[labelKey]||'', row[sheetKey]||''].join('||');
   }
 
-
-  function absoluteQuestionUrl(url){
-    try { return new URL(String(url || ''), location.href).href; }
-    catch(e) { return String(url || ''); }
-  }
-
-  function registerQuestionSourcesInBackground(){
-    try {
-      if (!rows.length || !chapterKey || !labelKey || !sheetKey) return;
-      const sources = rows.map(r => ({
-        quizId: r[chapterKey] || '',
-        label: r[labelKey] || '',
-        sheetURL: absoluteQuestionUrl(r[sheetKey] || '')
-      })).filter(x => x.quizId && x.sheetURL);
-
-      const body = new URLSearchParams({
-        action:'registerQuestionSources',
-        book,
-        sources:JSON.stringify(sources),
-        v:APP_VERSION
-      });
-
-      fetch(SCRIPT_URL, {
-        method:'POST',
-        body,
-        mode:'no-cors',
-        keepalive:true,
-        credentials:'omit',
-        cache:'no-store'
-      }).catch(()=>{});
-    } catch(e) {}
-  }
-
-  async function loadQuestionCountCache(){
-    const r = await apiFetch({ action:'getQuestionCounts', book }, 1);
-    if (r && r.ok && r.counts) {
-      Object.entries(r.counts).forEach(([url, count]) => {
-        countCache.set(absoluteQuestionUrl(url), Number(count || 0));
-      });
-      questionCountCacheLoaded = true;
-      updateQuestionCountDisplays();
-      return true;
-    }
-    questionCountCacheLoaded = false;
-    return false;
-  }
-
-  function loadQuestionCountCacheInBackground(){
-    if (questionCountCacheLoaded) {
-      updateQuestionCountDisplays();
-      return Promise.resolve(true);
-    }
-    if (questionCountLoadingPromise) return questionCountLoadingPromise;
-
-    questionCountLoadingPromise = loadQuestionCountCache()
-      .catch(() => {
-        questionCountCacheLoaded = false;
-        return false;
-      })
-      .finally(() => {
-        questionCountLoadingPromise = null;
-      });
-
-    return questionCountLoadingPromise;
-  }
-
-  function updateQuestionCountDisplays(){
-    if (!rows.length || !sheetKey) return;
-    for (const row of rows) {
-      const monsterId = buildMonsterId(row);
-      const el = document.getElementById('count_' + hashId(monsterId));
-      if (!el) continue;
-
-      const key = absoluteQuestionUrl(row[sheetKey]);
-      if (countCache.has(key)) {
-        el.textContent = String(countCache.get(key));
-      } else {
-        el.textContent = '-';
-      }
-    }
-  }
-
   async function getQuestionCount(url){
-    // 只使用 QuestionCounts 缓存，不再为了显示题数逐份读取 CSV。
-    const key = absoluteQuestionUrl(url);
-    return countCache.has(key) ? countCache.get(key) : null;
+    if (countCache.has(url)) return countCache.get(url);
+    const cnt = await new Promise(resolve => {
+      Papa.parse(url, {
+        download:true, header:true, skipEmptyLines:true,
+        complete(r2){
+          const c = r2.data.filter(q => q.question && String(q.question).trim()).length;
+          resolve(c);
+        },
+        error(){ resolve(0); }
+      });
+    });
+    countCache.set(url, cnt);
+    return cnt;
   }
 
   function buildMonsterItem(row){
@@ -992,8 +976,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const st = progressState.monsters[monsterId] || {};
     const titleText = `${row[chapterKey]}${row[labelKey] ? ' — ' + row[labelKey] : ''}`;
     const countId = 'count_' + hashId(monsterId);
-    const countKey = absoluteQuestionUrl(row[sheetKey]);
-    const cnt = countCache.has(countKey) ? String(countCache.get(countKey)) : '...';
+    const countKey = absoluteUrl(row[sheetKey]);
+    const cnt = countCache.has(countKey) ? String(countCache.get(countKey)) : '-';
     const now = nowMs();
     const isDead = st.reviveAt && Number(st.reviveAt) > now;
     const statusText = isDead ? `💀 已击败（${daysLeft(st.reviveAt)}后复活）` : '🟢 存活';
@@ -1050,24 +1034,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function startQuiz(row, mode){
-    isStartingQuiz = true;
     if (mode === 'monster') {
       setLoading(true, '正在检查小怪状态，请稍等...');
       try {
-        const guard = await apiFetch({ action:'canStartBattle', book, name:user, type:'monster', monsterId:buildMonsterId(row) }, 3);
+        const guard = await apiFetch({ action:'canStartBattle', book, name:user, type:'monster', monsterId:buildMonsterId(row) }, 0);
         if (!guard.ok || !guard.canStart) {
           setLoading(false);
-          isStartingQuiz = false;
           alert(guard.error || '这只小怪还没有复活，不能重复挑战。');
           await loadProgress();
           updateHeader();
           return showChapterList();
         }
       } catch(e) {
+        // Apps Script 慢时不阻止学生做题。
+        console.warn('小怪检查超时，先允许进入练习：', e);
         setLoading(false);
-        isStartingQuiz = false;
-        alert('连接验证失败，请点“更新页面”后再试。');
-        return;
       }
     }
     currentMode = mode;
@@ -1085,7 +1066,6 @@ document.addEventListener('DOMContentLoaded', () => {
     qs = await loadQuestionsReliable(row[sheetKey], 4);
     if (!qs.length) {
       setLoading(false);
-      isStartingQuiz = false;
       alert('题库暂时没有成功加载，请等几秒后再按一次。系统不会提交空成绩。');
       clearBattleHp();
       return showChapterList();
@@ -1101,14 +1081,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('quiz').style.display = 'block';
     updateUI(0);
     setLoading(false);
-    isStartingQuiz = false;
     nextQ();
   }
 
   async function startBossFight(babNo, arr){
     setLoading(true, '正在检查 Boss 状态，请稍等...');
     try {
-      const guard = await apiFetch({ action:'canStartBattle', book, name:user, type:'boss', bab:String(babNo) }, 3);
+      const guard = await apiFetch({ action:'canStartBattle', book, name:user, type:'boss', bab:String(babNo) }, 0);
       if (!guard.ok || !guard.canStart) {
         setLoading(false);
         alert(guard.error || 'Boss 还没有复活，不能重复挑战。');
@@ -1117,9 +1096,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return showChapterList();
       }
     } catch(e) {
+      // Apps Script 慢时不阻止学生挑战 Boss。
+      console.warn('Boss 检查超时，先允许进入练习：', e);
       setLoading(false);
-      alert('连接验证失败，请点“更新页面”后再试。');
-      return;
     }
     currentMode = 'boss';
     currentRow = { [chapterKey]: `Bab ${babNo}`, [labelKey]:'Boss Challenge' };
@@ -1240,7 +1219,8 @@ document.addEventListener('DOMContentLoaded', () => {
         inp.type = (q.type==='checkbox'?'checkbox':'radio');
         inp.name='opt'; inp.value=l; inp.id='opt_'+l;
         const lbl=document.createElement('label'); lbl.className='option-label'; lbl.htmlFor='opt_'+l;
-        lbl.appendChild(inp); lbl.append(' '+q[l]); opts.appendChild(lbl);
+        const sp=document.createElement('span'); sp.className='option-text'; sp.textContent = q[l];
+        lbl.appendChild(inp); lbl.appendChild(sp); opts.appendChild(lbl);
       });
     }
     div.appendChild(opts);
@@ -1410,13 +1390,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const quizEndTime = Date.now();
     const usedSeconds = chapterStart ? Math.floor((quizEndTime - chapterStart)/1000) : 0;
-    // 第一次答对准确率：
-    // correct 包含后来增加的重复题答对次数；每次答错会增加 2 题。
-    // 第一次就答对题数 = correct - 2 × wrong
-    // 原本题数 = correct - wrong
-    const firstTryCorrect = Math.max(0, correct - 2 * wrong);
-    const originalTotal = Math.max(1, correct - wrong);
-    const accuracy = Math.max(0, Math.min(1, firstTryCorrect / originalTotal));
+    const accuracy = baseTotal ? Math.min(1, correct / baseTotal) : 0;
     const accuracyPct = Math.round(accuracy * 100);
     let battleMsg = '';
     let exp = 10;
@@ -1482,7 +1456,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateHeader(Number(progressState.level || 1));
 
     document.getElementById('finish-msg').textContent = `恭喜 ${displayUser || user}，本次完成！`;
-    document.getElementById('stats').textContent = `模式：${modeLabel(currentMode)}｜得分: ${score}｜第一次答对准确率: ${accuracyPct}%｜答对 ${correct} 题｜答错 ${wrong} 题｜用时：${formatDuration(usedSeconds)}｜EXP +${currentExpGain}`;
+    document.getElementById('stats').textContent = `模式：${modeLabel(currentMode)}｜得分: ${score}｜正确率: ${accuracyPct}%｜答对 ${correct} 题｜答错 ${wrong} 题｜用时：${formatDuration(usedSeconds)}｜EXP +${currentExpGain}`;
     document.getElementById('battle-result').textContent = battleMsg;
     document.getElementById('submit-status').textContent = '正在送出成绩…';
 
@@ -1532,6 +1506,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function submitByHiddenForm(payload){
     return new Promise(resolve => {
       const form = document.getElementById('postForm');
+      form.action.value = payload.action || 'submitToQueue';
+      form.submitId.value = payload.submitId || '';
       form.book.value    = payload.book || '';
       form.quizId.value  = payload.quizId || '';
       form.name.value    = payload.name || '';
@@ -1542,7 +1518,7 @@ document.addEventListener('DOMContentLoaded', () => {
       form.mode.value    = payload.mode || '';
       form.expGained.value = payload.expGained || 0;
       try { form.submit(); } catch(e) {}
-      setTimeout(() => resolve({ ok:true, via:'form' }), 1400);
+      setTimeout(() => resolve({ ok:true, via:'form' }), 1200);
     });
   }
 
@@ -1561,43 +1537,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   function submitQueueBeacon(params){
-    // 最快提交：优先使用 navigator.sendBeacon，不等待 Apps Script / Google Sheet 完成。
-    // 注意：学生端会马上放行；Google Sheet 里出现时间仍由 Google 后台决定。
+    // 三通道备用提交：GET Image + GET fetch + hidden form POST，全部用同一个 submitId，Apps Script 会自动防重复。
+    let ok = false;
     try {
       const payload = { ...params, action:'submitToQueue', v:APP_VERSION, _:String(Date.now()) };
-      const body = new URLSearchParams(payload);
-
-      if (navigator.sendBeacon) {
-        const ok = navigator.sendBeacon(SCRIPT_URL, body);
-        if (ok) return true;
-      }
-
-      // sendBeacon 不支持时，用 keepalive fetch；不等待结果。
-      try {
-        fetch(SCRIPT_URL, {
-          method:'POST',
-          body,
-          mode:'no-cors',
-          keepalive:true,
-          credentials:'omit',
-          cache:'no-store'
-        }).catch(()=>{});
-        return true;
-      } catch(e) {}
-
-      // 最后兜底：Image GET
       const q = new URLSearchParams(payload);
+      const url = SCRIPT_URL + '?' + q.toString();
+
       const img = new Image();
       img.referrerPolicy = 'no-referrer';
-      img.src = SCRIPT_URL + '?' + q.toString();
+      img.src = url;
       window.__scoreBeacons = window.__scoreBeacons || [];
       window.__scoreBeacons.push(img);
       setTimeout(() => {
-        try { window.__scoreBeacons = (window.__scoreBeacons || []).slice(-20); } catch(e) {}
-      }, 5000);
-      return true;
+        try { window.__scoreBeacons = (window.__scoreBeacons || []).slice(-30); } catch(e) {}
+      }, 8000);
+      ok = true;
+
+      try { fetch(url, { method:'GET', mode:'no-cors', cache:'no-store', credentials:'omit' }).catch(()=>{}); ok = true; } catch(e) {}
+      try { submitByHiddenForm(payload); ok = true; } catch(e) {}
+
+      return ok;
     } catch(e) {
-      return false;
+      return ok;
     }
   }
 
@@ -1616,90 +1578,67 @@ document.addEventListener('DOMContentLoaded', () => {
       expGained: currentExpGain
     };
 
-    // 先保存在本机，直到后台确认进入 SubmitQueue 才删除。
-    savePendingScore(payload);
+    document.getElementById('submit-status').textContent = '正在送出成绩...';
+    setLoading(true, '正在送出成绩...');
 
-    document.getElementById('submit-status').textContent = '✅ 成绩已送出（后台处理中）';
-
-    // 立即送出，不等待，不阻塞学生。
-    submitQueueBeacon(payload);
-
-    // 背景自动确认 / 补交：2秒、5秒、10秒。
-    schedulePendingScoreRetries(payload.submitId);
-  }
-
-  function readPendingScores(){
     try {
-      const arr = JSON.parse(localStorage.getItem(PENDING_SCORE_KEY) || '[]');
-      return Array.isArray(arr) ? arr : [];
+      // 第一通道：hidden form POST。这个是最稳定、最少被手机浏览器拦截的提交方式。
+      await submitByHiddenForm(payload);
+
+      // 第二通道：Image GET。和错题本同一种方式，作为备份。
+      submitQueueBeacon(payload);
+
+      // 第三通道：JSONP 只做确认；失败不代表没送出。
+      jsonpApi(payload, 5000).catch(()=>{});
+
+      document.getElementById('submit-status').textContent = '✅ 成绩已送出到 SubmitQueue（请稍后刷新成绩表）';
     } catch(e) {
-      return [];
+      console.error(e);
+      savePendingScore(payload);
+      document.getElementById('submit-status').innerHTML =
+        '⚠️ 成绩暂存在本机。请点“补交成绩”或截图给老师。 ' +
+        '<button class="btn small secondary" onclick="window.retryPendingScores && window.retryPendingScores()">补交成绩</button>';
+    } finally {
+      setLoading(false);
     }
-  }
-
-  function writePendingScores(arr){
-    try {
-      localStorage.setItem(PENDING_SCORE_KEY, JSON.stringify((arr || []).slice(-60)));
-    } catch(e) {}
   }
 
   function savePendingScore(payload){
-    const arr = readPendingScores();
-    const id = String(payload.submitId || '');
-    if (!id) return;
-    const idx = arr.findIndex(x => String(x.submitId || '') === id);
-    if (idx >= 0) arr[idx] = payload;
-    else arr.push(payload);
-    writePendingScores(arr);
-  }
-
-  function removePendingScore(submitId){
-    const id = String(submitId || '');
-    if (!id) return;
-    const arr = readPendingScores().filter(x => String(x.submitId || '') !== id);
-    writePendingScores(arr);
-  }
-
-  async function confirmOrResubmitPending(payload){
     try {
-      const r = await apiFetch({ ...payload, action:'submitToQueue' }, 1);
-      if (r && r.ok) {
-        removePendingScore(payload.submitId);
-        return true;
-      }
+      const key = 'kee_pending_scores_v1';
+      const arr = JSON.parse(localStorage.getItem(key) || '[]');
+      const id = String(payload.submitId || '');
+      const kept = arr.filter(x => String(x.submitId || '') !== id);
+      kept.push(payload);
+      localStorage.setItem(key, JSON.stringify(kept.slice(-20)));
     } catch(e) {}
-    return false;
-  }
-
-  function schedulePendingScoreRetries(submitId){
-    const delays = [2000, 5000, 10000];
-    delays.forEach(delay => {
-      setTimeout(async () => {
-        const payload = readPendingScores().find(x => String(x.submitId || '') === String(submitId || ''));
-        if (!payload) return;
-        await confirmOrResubmitPending(payload);
-      }, delay);
-    });
-  }
-
-  async function retryPendingScoresInBackground(){
-    const arr = readPendingScores();
-    if (!arr.length) return;
-    for (const payload of arr) {
-      await confirmOrResubmitPending(payload);
-    }
   }
 
   window.retryPendingScores = async function(){
-    const arr = readPendingScores();
+    const key = 'kee_pending_scores_v1';
+    let arr = [];
+    try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { arr = []; }
     if (!arr.length) return alert('没有待补交成绩。');
+
     setLoading(true, '正在补交成绩...');
-    let okCount = 0;
-    for (const payload of arr) {
-      if (await confirmOrResubmitPending(payload)) okCount++;
+    let sent = 0;
+    const remain = [];
+
+    for (const item of arr) {
+      try {
+        await submitByHiddenForm({ ...item, action:'submitToQueue' });
+        submitQueueBeacon({ ...item, action:'submitToQueue' });
+        sent++;
+      } catch(e) {
+        remain.push(item);
+      }
     }
+
+    if (remain.length) localStorage.setItem(key, JSON.stringify(remain.slice(-20)));
+    else localStorage.removeItem(key);
+
     setLoading(false);
-    alert(`补交完成：成功 ${okCount}，剩余 ${readPendingScores().length}`);
+    alert(`补交完成：已送出 ${sent} 份；${remain.length} 份仍暂存在本机。`);
   }
 
   function daysLeft(ts){
