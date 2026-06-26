@@ -132,6 +132,13 @@
     body.theme-dark .alive{color:#4ade80!important}
     body.theme-dark .dead{color:#f87171!important}
     body.theme-dark .locked{color:#fbbf24!important}
+    body.theme-dark .loading-box{background:rgba(15,23,42,.78)!important}
+    body.theme-dark .loading-inner{
+      background:#1e293b!important;
+      color:#f8fafc!important;
+      border-color:#475569!important;
+    }
+    body.theme-dark #loadingText{color:#f8fafc!important}
     body.theme-dark input[type="text"],
     body.theme-dark input[type="password"]{
       background:#0f172a!important;
@@ -384,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.06.26.2';
+  const APP_VERSION = '2026.06.26.3';
   const SKIP_SERVER_LOGIN = true; // 紧急稳定模式：登入不等待 Apps Script，避免学生卡在登入
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -799,6 +806,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 先显示章节，不等等级、怪兽、Boss、错题本、题数。
       progressState = { exp:0, level:1, monsters:{}, bosses:{} };
+      mergeLocalMonsterLocks();
       updateHeader();
 
       document.getElementById('login').style.display = 'none';
@@ -1137,9 +1145,83 @@ document.addEventListener('DOMContentLoaded', () => {
     const r = await apiFetch({ action:'getProgress', book, name:user }, 3);
     if (r.ok) {
       progressState = r.progress || { exp:0, level:1, monsters:{}, bosses:{} };
+      mergeLocalMonsterLocks();
       wrongBookMap = r.wrongBook || wrongBookMap || {};
       serverBaseMs = Number(r.serverNow || 0);
       perfBaseMs = performance.now();
+    }
+  }
+
+  function localMonsterLockKey(){
+    return 'kee_local_monster_locks_v1_' + encodeURIComponent(`${book}__${user}`);
+  }
+
+  function readLocalMonsterLocks(){
+    try {
+      const raw = JSON.parse(localStorage.getItem(localMonsterLockKey()) || '{}');
+      return raw && typeof raw === 'object' ? raw : {};
+    } catch(e) {
+      return {};
+    }
+  }
+
+  function writeLocalMonsterLocks(locks){
+    try {
+      localStorage.setItem(localMonsterLockKey(), JSON.stringify(locks || {}));
+    } catch(e) {}
+  }
+
+  function mergeLocalMonsterLocks(){
+    const locks = readLocalMonsterLocks();
+    const now = nowMs();
+    let changed = false;
+    progressState.monsters = progressState.monsters || {};
+    Object.entries(locks).forEach(([monsterId, reviveAt]) => {
+      const until = Number(reviveAt || 0);
+      if (!until || until <= now) {
+        delete locks[monsterId];
+        changed = true;
+        return;
+      }
+      const st = progressState.monsters[monsterId] || {};
+      if (!Number(st.reviveAt || 0) || Number(st.reviveAt || 0) < until) {
+        progressState.monsters[monsterId] = { ...st, reviveAt:until, localPending:true };
+      }
+    });
+    if (changed) writeLocalMonsterLocks(locks);
+  }
+
+  function isMonsterLocallyLocked(monsterId){
+    const locks = readLocalMonsterLocks();
+    const until = Number(locks[monsterId] || 0);
+    if (until > nowMs()) return true;
+    if (until) {
+      delete locks[monsterId];
+      writeLocalMonsterLocks(locks);
+    }
+    return false;
+  }
+
+  function rememberLocalMonsterKill(monsterId){
+    const reviveAt = nowMs() + 6 * 24 * 60 * 60 * 1000;
+    const locks = readLocalMonsterLocks();
+    locks[monsterId] = reviveAt;
+    writeLocalMonsterLocks(locks);
+    progressState.monsters = progressState.monsters || {};
+    const st = progressState.monsters[monsterId] || {};
+    progressState.monsters[monsterId] = {
+      ...st,
+      reviveAt,
+      killStreak:Number(st.killStreak || 0) + 1,
+      localPending:true
+    };
+  }
+
+  function clearLocalMonsterLock(monsterId){
+    const locks = readLocalMonsterLocks();
+    if (locks[monsterId]) {
+      delete locks[monsterId];
+      writeLocalMonsterLocks(locks);
     }
   }
 
@@ -1431,6 +1513,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 防止后台任务在学生做题中突然把页面切回首页。
     if (isQuizActive && document.getElementById('quiz').style.display !== 'none') return;
 
+    mergeLocalMonsterLocks();
     isQuizActive = false;
     document.getElementById('quiz').style.display = 'none';
     document.getElementById('finish').style.display = 'none';
@@ -1572,6 +1655,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const r = await apiFetch({ action:'tauntMonster', book, name:user, monsterId }, 1);
       if (!r.ok) return alert(r.error || '嘲讽失败');
+      clearLocalMonsterLock(monsterId);
       alert('😈 小怪被你嘲讽醒了！可以马上再挑战。');
       await loadCoins();
       await loadProgress();
@@ -1587,9 +1671,16 @@ document.addEventListener('DOMContentLoaded', () => {
   async function startQuiz(row, mode){
     isQuizActive = true;
     if (mode === 'monster') {
+      const monsterId = buildMonsterId(row);
+      if (isMonsterLocallyLocked(monsterId)) {
+        isQuizActive = false;
+        mergeLocalMonsterLocks();
+        showChapterList();
+        return alert('这只小怪刚刚已经被击败，状态还在同步中，不能重复挑战。');
+      }
       setLoading(true, '正在检查小怪状态，请稍等...');
       try {
-        const guard = await apiFetch({ action:'canStartBattle', book, name:user, type:'monster', monsterId:buildMonsterId(row) }, 0);
+        const guard = await apiFetch({ action:'canStartBattle', book, name:user, type:'monster', monsterId }, 0);
         if (!guard.ok || !guard.canStart) {
           setLoading(false);
           alert(guard.error || '这只小怪还没有复活，不能重复挑战。');
@@ -2188,6 +2279,7 @@ document.addEventListener('DOMContentLoaded', () => {
       coinReward = calculateCoinReward(currentMode, accuracyPct, kill, perfect, false);
 
       if (!battleEndedByDeath) {
+        if (kill) rememberLocalMonsterKill(buildMonsterId(currentRow));
         fireGameAction({ action:'updateMonster', book, name:user, monsterId:buildMonsterId(currentRow), accuracy:accuracyPct });
       }
 
