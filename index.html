@@ -154,6 +154,18 @@
     .finish-pop{animation:finishPop .45s ease}
     @keyframes finishPop{0%{transform:scale(.96);opacity:.75}60%{transform:scale(1.03);opacity:1}100%{transform:scale(1)}}
 
+
+    .shop-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:10px 0}
+    .shop-item{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--card)}
+    .shop-item .icon{font-size:30px}
+    .shop-item .name{font-weight:800;margin-top:4px}
+    .shop-item .price{color:var(--warn);font-weight:700;margin:6px 0}
+    .shop-item.owned{outline:3px solid rgba(34,197,94,.2)}
+    .shop-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+    .shop-tab{padding:8px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card);cursor:pointer}
+    .shop-tab.active{background:#111827;color:#fff}
+    .boost-badge{font-weight:700;color:#7c3aed}
+
     .hide{display:none!important}
   </style>
 </head>
@@ -183,7 +195,7 @@
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.06.19.7</div>
+    <div class="version-tag" id="versionTag">版本：2026.06.24.2</div>
   </div>
 </div>
 
@@ -210,6 +222,8 @@
       <button id="topRulesBtn" class="btn ghost small" type="button">📜 游戏规则</button>
       <button id="topBoardBtn" class="btn ghost small" type="button">🏆 排行榜</button>
       <button id="wrongBookBtn" class="btn ghost small" type="button">📝 错题本</button>
+      <button id="shopBtn" class="btn ghost small" type="button">🛒 金币商店</button>
+      <button id="rewardsBtn" class="btn ghost small" type="button">🎁 奖励规则</button>
       
     </div>
     <div class="muted" style="margin-top:8px;">背景颜色 / Theme</div>
@@ -226,7 +240,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.06.19.7</div>
+    <div class="version-tag">版本：2026.06.24.2</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -296,7 +310,7 @@
       <p><strong>🧟 小怪挑战</strong><br>
       正确率达到 70% 就能击败小怪；达到 90% 以上就是完美击败。</p>
       <p><strong>🔁 小怪复活</strong><br>
-      第一次击败后 7 天复活；第二次 14 天；第三次起 30 天。完美击败会直接 30 天后复活。</p>
+      小怪击败后 6 天复活；也可以花 80 金币嘲讽已死亡小怪，让它马上复活再挑战。</p>
       <p><strong>👹 Boss 挑战</strong><br>
       一个 Bab 里有 70% 小怪被击败后，才会解锁 Boss。Boss 会从整个 Bab 随机抽约 25% 的题目来考。</p>
       <p><strong>⚔️ Boss 机制</strong><br>
@@ -304,7 +318,7 @@
       <p><strong>📘 普通练习</strong><br>
       练习模式照常可做，答错的题目会再出现 2 次，帮助你记熟。</p>
       <p><strong>⭐ EXP 与等级</strong><br>
-      完成练习、击败小怪、挑战 Boss 都会拿到 EXP，EXP 满了就会升级。</p>
+      完成练习、击败小怪、挑战 Boss 都会拿到 EXP，EXP 满了就会升级。同一份练习每天最多 10 次 EXP；2倍经验卷为时间版，也包括 Boss。</p>
       <p><strong>⏳ 小提醒</strong><br>
       首次进入或提交成绩时，系统可能会稍慢一点，请稍等几秒。</p>
     </div>
@@ -319,6 +333,38 @@
     <div class="muted" style="margin-bottom:10px;">显示当前科目前 10 名</div>
     <div id="boardContent" style="line-height:1.8;">加载中...</div>
     <div style="text-align:right;"><button id="closeBoardBtn" class="btn">关闭</button></div>
+  </div>
+</div>
+
+
+<div id="shopMask" class="modal-mask">
+  <div class="modal">
+    <h3 style="margin-top:0;">🛒 金币商店</h3>
+    <div class="muted" id="shopSummary">加载中...</div>
+    <div class="shop-tabs">
+      <button class="shop-tab active" data-tab="useful">实用</button>
+      <button class="shop-tab" data-tab="title">称号</button>
+      <button class="shop-tab" data-tab="avatar">头像</button>
+    </div>
+    <div id="shopContent"></div>
+    <div style="text-align:right;margin-top:12px;"><button id="closeShopBtn" class="btn">关闭</button></div>
+  </div>
+</div>
+
+<div id="rewardRulesMask" class="modal-mask">
+  <div class="modal">
+    <h3 style="margin-top:0;">🎁 金币与奖励规则</h3>
+    <div style="line-height:1.8;">
+      <p><strong>🪙 金币来源</strong><br>第一次答对 +1 金币，第一次答错 -0.5 金币；击杀小怪、Boss 会有额外金币。</p>
+      <p><strong>💖 复活</strong><br>小怪复活 30 金币；Boss 复活 50 金币；每次挑战最多复活 1 次。用了复活后不能 Perfect Kill / Perfect Boss。</p>
+      <p><strong>💡 提示</strong><br>普通练习 10 金币；小怪 15 金币；Boss 25 金币。每题最多用 1 次。用了提示后不能 Perfect Kill / Perfect Boss。</p>
+      <p><strong>⚡ 时间版 2倍经验</strong><br>30分钟 150 金币，1小时 250 金币，2小时 400 金币。有效时间内普通练习、小怪、Boss 的 EXP x2；错题本不适用。</p>
+      <p><strong>😈 嘲讽小怪</strong><br>已死亡的小怪可花 80 金币马上复活再打。同一只小怪每天最多嘲讽 1 次。</p>
+      <p><strong>⏳ EXP 限制</strong><br>同一学生、同一科目、同一份练习，同一天最多只有 10 次可以得到 EXP；第 11 次开始成绩和金币照常记录，但 EXP 为 0。</p>
+      <p><strong>🏅 称号 10级</strong><br>🌱300、⚔️800、🔥1500、🧠2500、🛡️4000、👑6000、💎8500、🐉12000、🌟16000、🏆22000 金币。</p>
+      <p><strong>🧑‍🚀 头像 10级</strong><br>🐣300、🐱800、🦊1500、🐺2500、🐯4000、🐉6000、🧙8500、🦅12000、👑16000、🐲22000 金币。</p>
+    </div>
+    <div style="text-align:right;"><button id="closeRewardRulesBtn" class="btn">关闭</button></div>
   </div>
 </div>
 
@@ -337,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.06.19.7';
+  const APP_VERSION = '2026.06.26.1';
   const SKIP_SERVER_LOGIN = true; // 紧急稳定模式：登入不等待 Apps Script，避免学生卡在登入
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -380,6 +426,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let coinState = { coins:0, totalEarned:0, totalSpent:0 };
   let lastAccuracyPct = 0;
   let lastCoinReward = { baseCoins:0, penaltyCoins:0, bonusCoins:0, finalCoins:0, note:'' };
+  let shopProfile = { inventory:[], equipped:{}, activeBoost:null };
+  let hintUsedThisQuiz = false;
+  let activeBoostTimer = null;
+  let reviveUsed = false;
+  let preventAutoChapterJump = false;
 
   ensureLatestVersion_();
 
@@ -395,15 +446,27 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('topRulesBtn').onclick = () => toggleRules(true);
   document.getElementById('topBoardBtn').onclick = () => toggleBoard(true);
   document.getElementById('wrongBookBtn').onclick = showWrongBook;
+  if (document.getElementById('shopBtn')) document.getElementById('shopBtn').onclick = () => openShop('useful');
+  if (document.getElementById('rewardsBtn')) document.getElementById('rewardsBtn').onclick = () => toggleRewardRules(true);
+  if (document.getElementById('closeShopBtn')) document.getElementById('closeShopBtn').onclick = () => toggleShop(false);
+  if (document.getElementById('closeRewardRulesBtn')) document.getElementById('closeRewardRulesBtn').onclick = () => toggleRewardRules(false);
+  if (document.getElementById('shopMask')) document.getElementById('shopMask').onclick = (e) => { if (e.target.id === 'shopMask') toggleShop(false); };
+  if (document.getElementById('rewardRulesMask')) document.getElementById('rewardRulesMask').onclick = (e) => { if (e.target.id === 'rewardRulesMask') toggleRewardRules(false); };
+  document.querySelectorAll('.shop-tab').forEach(btn => btn.onclick = () => openShop(btn.dataset.tab || 'useful'));
+
   document.getElementById('wrongBackBtn').onclick = () => { document.getElementById('wrongBook').style.display='none'; showChapterList(); };
   document.getElementById('closeRulesBtn').onclick = () => toggleRules(false);
   document.getElementById('closeBoardBtn').onclick = () => toggleBoard(false);
   document.getElementById('rulesMask').onclick = (e) => { if (e.target.id === 'rulesMask') toggleRules(false); };
   document.getElementById('boardMask').onclick = (e) => { if (e.target.id === 'boardMask') toggleBoard(false); };
-  document.getElementById('backToListTop').onclick = () => {
+  function returnFromTopButton(){
+    isQuizActive = false;
+    setLoading(false);
     if (currentMode === 'wrongbook') showWrongBook();
     else showChapterList();
-  };
+  }
+
+  document.getElementById('backToListTop').onclick = returnFromTopButton;
   document.getElementById('backFromFinish').onclick = returnAfterFinish;
   setupThemeButtons();
 
@@ -472,6 +535,201 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('theme-' + theme);
     localStorage.setItem('kee_quiz_theme', theme);
     document.querySelectorAll('.theme-dot').forEach(btn => btn.classList.toggle('active', btn.dataset.theme === theme));
+  }
+
+
+  const SHOP_ITEMS = [
+    {itemId:'boost_exp2_30', type:'boost', name:'2倍经验卷 30分钟', icon:'⚡', price:150, desc:'30分钟内 EXP x2，普通练习/小怪/Boss 都适用'},
+    {itemId:'boost_exp2_60', type:'boost', name:'2倍经验卷 1小时', icon:'⚡', price:250, desc:'1小时内 EXP x2，普通练习/小怪/Boss 都适用'},
+    {itemId:'boost_exp2_120', type:'boost', name:'2倍经验卷 2小时', icon:'⚡', price:400, desc:'2小时内 EXP x2，普通练习/小怪/Boss 都适用'},
+    {itemId:'title_01', type:'title', name:'新手勇者', icon:'🌱', price:300},
+    {itemId:'title_02', type:'title', name:'小怪猎人', icon:'⚔️', price:800},
+    {itemId:'title_03', type:'title', name:'连胜挑战者', icon:'🔥', price:1500},
+    {itemId:'title_04', type:'title', name:'知识达人', icon:'🧠', price:2500},
+    {itemId:'title_05', type:'title', name:'精英守护者', icon:'🛡️', price:4000},
+    {itemId:'title_06', type:'title', name:'王者学生', icon:'👑', price:6000},
+    {itemId:'title_07', type:'title', name:'金币富豪', icon:'💎', price:8500},
+    {itemId:'title_08', type:'title', name:'终极勇者', icon:'🐉', price:12000},
+    {itemId:'title_09', type:'title', name:'传奇学霸', icon:'🌟', price:16000},
+    {itemId:'title_10', type:'title', name:'复习之神', icon:'🏆', price:22000},
+    {itemId:'avatar_01', type:'avatar', name:'小鸡学生', icon:'🐣', price:300},
+    {itemId:'avatar_02', type:'avatar', name:'猫猫学霸', icon:'🐱', price:800},
+    {itemId:'avatar_03', type:'avatar', name:'狐狸勇者', icon:'🦊', price:1500},
+    {itemId:'avatar_04', type:'avatar', name:'狼王学生', icon:'🐺', price:2500},
+    {itemId:'avatar_05', type:'avatar', name:'老虎战士', icon:'🐯', price:4000},
+    {itemId:'avatar_06', type:'avatar', name:'小龙战士', icon:'🐉', price:6000},
+    {itemId:'avatar_07', type:'avatar', name:'魔法学者', icon:'🧙', price:8500},
+    {itemId:'avatar_08', type:'avatar', name:'天空猎人', icon:'🦅', price:12000},
+    {itemId:'avatar_09', type:'avatar', name:'王者头像', icon:'👑', price:16000},
+    {itemId:'avatar_10', type:'avatar', name:'终极神龙', icon:'🐲', price:22000}
+  ];
+
+  function toggleShop(show){ document.getElementById('shopMask').style.display = show ? 'flex' : 'none'; }
+  function toggleRewardRules(show){ document.getElementById('rewardRulesMask').style.display = show ? 'flex' : 'none'; }
+
+  function getShopItem(itemId){ return SHOP_ITEMS.find(x => x.itemId === itemId) || null; }
+  function sellRefund(item){ return Math.floor(Number(item.price || 0) * 0.7); }
+  function hasItem(itemId){
+    return (shopProfile.inventory || []).some(x => String(x.itemId || x.ItemId || '') === itemId && Number(x.qty || x.Qty || 0) > 0);
+  }
+
+  function equippedItem(type){
+    const id = shopProfile.equipped && shopProfile.equipped[type];
+    return id ? getShopItem(id) : null;
+  }
+
+  function decorateName(nameText){
+    const av = equippedItem('avatar');
+    const title = equippedItem('title');
+    return `${av ? av.icon + ' ' : ''}${nameText || ''}${title ? ' ' + title.icon + ' ' + title.name : ''}`;
+  }
+
+  function updateBoostBadge(){
+    let txt = '';
+    const b = shopProfile.activeBoost;
+    if (b && Number(b.endAt || 0) > Date.now()) {
+      const left = Math.max(0, Number(b.endAt) - Date.now());
+      const mm = Math.floor(left / 60000);
+      const ss = Math.floor((left % 60000) / 1000);
+      txt = `｜⚡2倍EXP剩余 ${mm}:${String(ss).padStart(2,'0')}`;
+    }
+    const el = document.getElementById('statExp');
+    if (el && !el.dataset.base) el.dataset.base = el.textContent || '';
+    if (el) {
+      const exp = Number(progressState.exp || 0);
+      const progress = exp % 100;
+      el.textContent = `⚡${progress} / 100 ${txt}`;
+    }
+  }
+
+  async function loadShopProfile(){
+    try {
+      const r = await apiFetch({ action:'getShopProfile', book, name:user }, 2);
+      if (r && r.ok) {
+        shopProfile = {
+          inventory: r.inventory || [],
+          equipped: r.equipped || {},
+          activeBoost: r.activeBoost || null
+        };
+        applyEquippedDisplay();
+        clearInterval(activeBoostTimer);
+        activeBoostTimer = setInterval(updateBoostBadge, 1000);
+        updateBoostBadge();
+      }
+    } catch(e) {}
+  }
+
+  function applyEquippedDisplay(){
+    const display = decorateName(displayUser || user || '-');
+    const u = document.getElementById('statUser');
+    if (u) u.textContent = '学生：' + display;
+    const av = equippedItem('avatar');
+    const pIcon = document.getElementById('playerIcon');
+    if (pIcon && av) pIcon.textContent = av.icon;
+  }
+
+  async function openShop(tab='useful'){
+    toggleShop(true);
+    document.querySelectorAll('.shop-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    const box = document.getElementById('shopContent');
+    const sum = document.getElementById('shopSummary');
+    box.innerHTML = '加载中...';
+    await Promise.all([loadCoins(), loadShopProfile()]);
+    sum.textContent = `我的金币：${Number(coinState.coins || 0)}｜称号：${equippedItem('title') ? equippedItem('title').icon + ' ' + equippedItem('title').name : '未装备'}｜头像：${equippedItem('avatar') ? equippedItem('avatar').icon + ' ' + equippedItem('avatar').name : '未装备'}`;
+
+    let list = [];
+    if (tab === 'useful') list = SHOP_ITEMS.filter(x => x.type === 'boost');
+    else list = SHOP_ITEMS.filter(x => x.type === tab);
+
+    box.innerHTML = '<div class="shop-grid"></div>';
+    const grid = box.querySelector('.shop-grid');
+    list.forEach(item => {
+      const owned = hasItem(item.itemId);
+      const equipped = shopProfile.equipped && shopProfile.equipped[item.type] === item.itemId;
+      const div = document.createElement('div');
+      div.className = 'shop-item' + (owned ? ' owned' : '');
+      div.innerHTML = `
+        <div class="icon">${item.icon}</div>
+        <div class="name">${item.name}</div>
+        <div class="muted">${item.desc || (item.type === 'title' ? '称号会显示在名字旁边' : '头像会显示在学生角色和名字旁边')}</div>
+        <div class="price">🪙 ${item.price}</div>
+      `;
+      const btn = document.createElement('button');
+      btn.className = 'btn small';
+      if (item.type === 'boost') {
+        btn.textContent = `购买并立即开启`;
+        btn.onclick = () => buyItem(item.itemId, true);
+      } else if (!owned) {
+        btn.textContent = '购买';
+        btn.onclick = () => buyItem(item.itemId, false);
+      } else if (equipped) {
+        btn.textContent = '已装备';
+        btn.disabled = true;
+        btn.classList.add('done');
+      } else {
+        btn.textContent = '装备';
+        btn.onclick = () => equipItem(item.itemId);
+      }
+      div.appendChild(btn);
+      if (owned && (item.type === 'title' || item.type === 'avatar')) {
+        const sellBtn = document.createElement('button');
+        sellBtn.className = 'btn ghost small';
+        sellBtn.textContent = `卖回 +${sellRefund(item)}`;
+        sellBtn.onclick = () => sellItem(item.itemId);
+        div.appendChild(sellBtn);
+      }
+      grid.appendChild(div);
+    });
+  }
+
+  async function buyItem(itemId, activate){
+    const item = getShopItem(itemId);
+    if (!item) return alert('找不到商品');
+    if (!confirm(`确定购买 ${item.icon} ${item.name}？\n价格：${item.price} 金币`)) return;
+    setLoading(true, '正在购买...');
+    try {
+      const r = await apiFetch({ action:'buyShopItem', book, name:user, itemId, activate: activate ? 'true' : 'false' }, 1);
+      if (!r.ok) return alert(r.error || '购买失败');
+      await Promise.all([loadCoins(), loadShopProfile()]);
+      alert(r.message || '购买成功');
+      openShop(item.type === 'boost' ? 'useful' : item.type);
+    } catch(e) {
+      alert('购买失败：' + e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function equipItem(itemId){
+    const item = getShopItem(itemId);
+    if (!item) return;
+    setLoading(true, '正在装备...');
+    try {
+      const r = await apiFetch({ action:'equipShopItem', book, name:user, itemId }, 1);
+      if (!r.ok) return alert(r.error || '装备失败');
+      await loadShopProfile();
+      openShop(item.type);
+    } catch(e) { alert('装备失败：' + e); }
+    finally { setLoading(false); }
+  }
+
+  async function sellItem(itemId){
+    const item = getShopItem(itemId);
+    if (!item) return;
+    const refund = sellRefund(item);
+    if (!confirm(`确定卖回 ${item.icon} ${item.name}？\n可退回：${refund} 金币\n如果正在装备，会自动卸下。`)) return;
+    setLoading(true, '正在卖回...');
+    try {
+      const r = await apiFetch({ action:'sellShopItem', book, name:user, itemId }, 1);
+      if (!r.ok) return alert(r.error || '卖回失败');
+      await Promise.all([loadCoins(), loadShopProfile()]);
+      alert(r.message || `卖回成功，退回 ${refund} 金币。`);
+      openShop(item.type);
+    } catch(e) {
+      alert('卖回失败：' + e);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function toggleRules(show){
@@ -549,7 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 题数从 Sheet 后台直接补上；题库也后台预载几份，学生点练习会更快。
       setTimeout(() => loadQuestionCountsFromSheet(), 600);
       setTimeout(() => loadQuestionCountsFallbackFromCsv(), 2500);
-      setTimeout(() => loadCoins(), 1800);
+      setTimeout(() => { loadCoins(); loadShopProfile(); }, 1800);
       setTimeout(() => preloadVisibleQuestionBanks(), 1500);
 
       // 后台慢慢补上怪兽状态，不阻塞学生做练习。
@@ -558,7 +816,7 @@ document.addEventListener('DOMContentLoaded', () => {
           .then(() => {
             loadCoins();
             updateHeader();
-            if (document.getElementById('chapters').style.display !== 'none') showChapterList();
+            if (!isQuizActive && document.getElementById('chapters').style.display !== 'none') showChapterList();
           })
           .catch(()=>{});
       }, 2500);
@@ -623,7 +881,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const exp = Number(progressState.exp || 0);
     const level = Number(progressState.level || 1);
     const progress = exp % 100;
-    document.getElementById('statUser').textContent = '学生：' + (displayUser || user || '-');
+    document.getElementById('statUser').textContent = '学生：' + decorateName(displayUser || user || '-');
     document.getElementById('statBook').textContent = '科目：' + book;
     document.getElementById('statLevel').textContent = 'Lv ' + level;
     document.getElementById('statExp').textContent = `⚡${progress} / 100`;
@@ -919,11 +1177,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function postWrongBookAction(payload){
     // WrongBook 内容可能很长，Image GET 可能超出 URL 长度。
-    // 所以用 POST 为主，GET 只做短内容备用。
+    // 每次只走一种提交方式，避免同一题被多渠道重复写入。
     const fullPayload = { ...payload, v:APP_VERSION, _:String(Date.now()) };
+    const dedupeKey = [fullPayload.action, fullPayload.book, fullPayload.name, fullPayload.wrongId].join('|');
+    window.__wrongBookSentAt = window.__wrongBookSentAt || {};
+    const now = Date.now();
+    if (window.__wrongBookSentAt[dedupeKey] && now - window.__wrongBookSentAt[dedupeKey] < 2500) return true;
+    window.__wrongBookSentAt[dedupeKey] = now;
 
-    let sent = false;
-    sent = postByHiddenFormGeneric(fullPayload) || sent;
+    const body = new URLSearchParams(fullPayload).toString();
+
+    try {
+      if (navigator.sendBeacon) {
+        const blob = new Blob([body], { type:'application/x-www-form-urlencoded;charset=UTF-8' });
+        if (navigator.sendBeacon(SCRIPT_URL, blob)) return true;
+      }
+    } catch(e) {}
 
     try {
       fetch(SCRIPT_URL, {
@@ -932,10 +1201,12 @@ document.addEventListener('DOMContentLoaded', () => {
         cache:'no-store',
         credentials:'omit',
         headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
-        body:new URLSearchParams(fullPayload).toString()
+        body
       }).catch(()=>{});
-      sent = true;
+      return true;
     } catch(e) {}
+
+    if (postByHiddenFormGeneric(fullPayload)) return true;
 
     // 短资料才用 Image GET，避免 question/options 太长导致失败。
     try {
@@ -950,11 +1221,11 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           try { window.__wrongBookBeacons = (window.__wrongBookBeacons || []).slice(-30); } catch(e) {}
         }, 5000);
-        sent = true;
+        return true;
       }
     } catch(e) {}
 
-    return sent;
+    return false;
   }
 
   function buildWrongId(row, q){
@@ -1107,13 +1378,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function startWrongPractice(w){
+    isQuizActive = true;
     currentMode = 'wrongbook';
     currentWrongId = w.wrongId || '';
     currentRow = { [chapterKey]: w.chapter || '错题本', [labelKey]: w.label || '', [sheetKey]: w.sheet || '' };
     qs = [wrongBookQuestionFromRecord(w)];
     baseTotal = 1;
     queue = [...qs];
-    score = correct = wrong = firstTryCorrect = firstTryWrong = 0;
+    score = correct = wrong = firstTryCorrect = firstTryWrong = 0; hintUsedThisQuiz = false;
     currentExpGain = 0;
     chapterStart = 0;
     clearBattleHp();
@@ -1130,6 +1402,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function startWrongChapterPractice(chapter, list){
+    isQuizActive = true;
     currentMode = 'wrongbook';
     currentWrongId = '';
     const first = list && list[0] ? list[0] : {};
@@ -1137,7 +1410,7 @@ document.addEventListener('DOMContentLoaded', () => {
     qs = (list || []).map(wrongBookQuestionFromRecord);
     baseTotal = qs.length;
     queue = shuffle([...qs]);
-    score = correct = wrong = firstTryCorrect = firstTryWrong = 0;
+    score = correct = wrong = firstTryCorrect = firstTryWrong = 0; hintUsedThisQuiz = false;
     currentExpGain = 0;
     chapterStart = 0;
     clearBattleHp();
@@ -1154,6 +1427,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   async function showChapterList(){
+    // 防止后台任务在学生做题中突然把页面切回首页。
+    if (isQuizActive && document.getElementById('quiz').style.display !== 'none') return;
+
     isQuizActive = false;
     document.getElementById('quiz').style.display = 'none';
     document.getElementById('finish').style.display = 'none';
@@ -1247,6 +1523,13 @@ document.addEventListener('DOMContentLoaded', () => {
     fightBtn.onclick = () => startQuiz(row, 'monster');
 
     actions.append(practiceBtn, fightBtn);
+    if (isDead) {
+      const tauntBtn = document.createElement('button');
+      tauntBtn.className = 'btn ghost small';
+      tauntBtn.textContent = '😈 嘲讽 -80';
+      tauntBtn.onclick = () => tauntMonster(row);
+      actions.appendChild(tauntBtn);
+    }
     item.append(left, actions);
     return item;
   }
@@ -1280,7 +1563,28 @@ document.addEventListener('DOMContentLoaded', () => {
     return card;
   }
 
+
+  async function tauntMonster(row){
+    const monsterId = buildMonsterId(row);
+    if (!confirm('花 80 金币嘲讽这只已死亡的小怪，让它马上复活再挑战？')) return;
+    setLoading(true, '正在嘲讽小怪...');
+    try {
+      const r = await apiFetch({ action:'tauntMonster', book, name:user, monsterId }, 1);
+      if (!r.ok) return alert(r.error || '嘲讽失败');
+      alert('😈 小怪被你嘲讽醒了！可以马上再挑战。');
+      await loadCoins();
+      await loadProgress();
+      updateHeader();
+      showChapterList();
+    } catch(e) {
+      alert('嘲讽失败：' + e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function startQuiz(row, mode){
+    isQuizActive = true;
     if (mode === 'monster') {
       setLoading(true, '正在检查小怪状态，请稍等...');
       try {
@@ -1290,6 +1594,7 @@ document.addEventListener('DOMContentLoaded', () => {
           alert(guard.error || '这只小怪还没有复活，不能重复挑战。');
           await loadProgress();
           updateHeader();
+          isQuizActive = false;
           return showChapterList();
         }
       } catch(e) {
@@ -1307,7 +1612,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('backToListTop').textContent = '🏠 回到章节选择';
     document.getElementById('quiz-title').textContent = `${row[chapterKey]}${row[labelKey] ? ' — ' + row[labelKey] : ''}`;
     document.getElementById('mode-badge').textContent = mode === 'practice' ? '模式：普通练习' : '模式：小怪挑战';
-    score = correct = wrong = firstTryCorrect = firstTryWrong = 0;
+    score = correct = wrong = firstTryCorrect = firstTryWrong = 0; hintUsedThisQuiz = false;
     currentExpGain = 0;
     chapterStart = 0;
     setLoading(true, '正在加载题目，请稍等...');
@@ -1333,6 +1638,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function startBossFight(babNo, arr){
+    isQuizActive = true;
     setLoading(true, '正在检查 Boss 状态，请稍等...');
     try {
       const guard = await apiFetch({ action:'canStartBattle', book, name:user, type:'boss', bab:String(babNo) }, 0);
@@ -1341,7 +1647,8 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(guard.error || 'Boss 还没有复活，不能重复挑战。');
         await loadProgress();
         updateHeader();
-        return showChapterList();
+        isQuizActive = false;
+          return showChapterList();
       }
     } catch(e) {
       // Apps Script 慢时不阻止学生挑战 Boss。
@@ -1399,9 +1706,10 @@ document.addEventListener('DOMContentLoaded', () => {
     battleLabel = label || '怪兽血量';
     battleHp = Math.max(0, Number(hp || 0));
     battleMaxHp = Math.max(1, Number(maxHp || hp || 1));
-    playerMaxHp = 5; playerHp = 5; wrongStreak = 0; correctStreak = 0; battleEndedByDeath = false;
+    playerMaxHp = 5; playerHp = 5; wrongStreak = 0; correctStreak = 0; battleEndedByDeath = false; reviveUsed = false;
     document.getElementById('battleArena').style.display = (currentMode === 'practice') ? 'none' : 'block';
-    document.getElementById('playerName').textContent = displayUser || user || '学生';
+    document.getElementById('playerName').textContent = decorateName(displayUser || user || '学生');
+    const eqAv = equippedItem('avatar'); if (eqAv) document.getElementById('playerIcon').textContent = eqAv.icon;
     document.getElementById('enemyName').textContent = currentMode === 'boss' ? 'Boss' : '小怪';
     document.getElementById('monsterIcon').textContent = currentMode === 'boss' ? '👹' : '🧟';
     document.getElementById('enemyHpLabel').textContent = currentMode === 'boss' ? 'Boss HP' : '小怪HP';
@@ -1412,7 +1720,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function damageBattleHp(amount){ if (battleHp == null) return; battleHp = Math.max(0, battleHp - Math.max(0, Number(amount || 0))); animateEnemyHit(); renderBattleHp(); }
   function damagePlayerHp(amount){ if (playerHp == null) return; playerHp = Math.max(0, playerHp - Math.max(0, Number(amount || 0))); animatePlayerHit(); renderBattleHp(); }
   function healPlayerHp(amount){ if (playerHp == null) return; const before = playerHp; playerHp = Math.min(playerMaxHp, playerHp + Math.max(0, Number(amount || 0))); if (playerHp > before) animatePlayerHeal(); renderBattleHp(); }
-  function clearBattleHp(){ battleHp = battleMaxHp = null; playerHp = playerMaxHp = 5; wrongStreak = correctStreak = 0; battleEndedByDeath = false; const arena=document.getElementById('battleArena'); if(arena) arena.style.display='none'; }
+  function clearBattleHp(){ battleHp = battleMaxHp = null; playerHp = playerMaxHp = 5; wrongStreak = correctStreak = 0; battleEndedByDeath = false; reviveUsed = false; const arena=document.getElementById('battleArena'); if(arena) arena.style.display='none'; }
   function renderBattleHp(){
     if (currentMode === 'practice' || battleHp == null || battleMaxHp == null) { clearBattleHp(); return; }
     document.getElementById('battleArena').style.display = 'block';
@@ -1498,6 +1806,104 @@ document.addEventListener('DOMContentLoaded', () => {
     pg.max = qs.length || 1; pg.value = (qs.length - queue.length);
   }
 
+
+  async function spendCoins(amount, reason, quizId){
+    const amt = Number(amount || 0);
+    if (!amt) return { ok:false, error:'Invalid amount' };
+    try {
+      const r = await apiFetch({
+        action:'spendCoins',
+        book,
+        name:user,
+        amount:String(amt),
+        reason:reason || '使用金币',
+        quizId:quizId || (currentMode === 'boss' ? `Bab ${currentBab} Boss` : (currentRow ? currentRow[chapterKey] : '')),
+        mode:currentMode,
+        submitId:'SPEND|' + book + '|' + (displayUser || user) + '|' + Date.now()
+      }, 2);
+      if (r && r.ok) {
+        coinState.coins = Number(r.coins || 0);
+        updateHeader();
+      }
+      return r || { ok:false, error:'No response' };
+    } catch(e) {
+      return { ok:false, error:String(e) };
+    }
+  }
+
+  async function tryReviveAfterDeath(fb, nb){
+    if (reviveUsed || battleEndedByDeath) return false;
+    if (currentMode !== 'monster' && currentMode !== 'boss') return false;
+
+    const price = currentMode === 'boss' ? 50 : 30;
+    const label = currentMode === 'boss' ? 'Boss' : '小怪';
+    const currentCoins = Number(coinState.coins || 0);
+
+    const ok = confirm(`你被${label}击败了！\n\n是否花 ${price} 金币复活？\n\n目前金币：${currentCoins}`);
+    if (!ok) return false;
+
+    if (currentCoins < price) {
+      alert(`金币不足，无法复活。\n需要 ${price} 金币，目前只有 ${currentCoins}。`);
+      return false;
+    }
+
+    nb.disabled = true;
+    nb.textContent = '正在复活...';
+
+    const r = await spendCoins(price, `${label}复活 -${price}`, currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey]);
+    nb.disabled = false;
+
+    if (!r || !r.ok) {
+      alert((r && r.error) ? r.error : '复活失败，请稍后再试。');
+      nb.textContent = '查看结果';
+      return false;
+    }
+
+    reviveUsed = true;
+    battleEndedByDeath = false;
+    playerHp = currentMode === 'boss' ? 2 : 3;
+    wrongStreak = 0;
+    correctStreak = 0;
+    renderBattleHp();
+    setCombatMsg(`🪙 已花 ${price} 金币复活！本次不能 Perfect Kill。`);
+    fb.innerHTML += `<br><span style="color:#047857">🪙 已花 ${price} 金币复活！HP 回复到 ${playerHp}，可以继续挑战。（本次不能 Perfect Kill）</span>`;
+    nb.textContent = '下一题';
+    return true;
+  }
+
+
+  async function useHintForQuestion(q, div, fb){
+    if (q.hintUsed) return alert('这题已经用过提示。');
+    const price = currentMode === 'boss' ? 25 : (currentMode === 'monster' ? 15 : 10);
+    if (Number(coinState.coins || 0) < price) return alert(`金币不足，需要 ${price} 金币。`);
+    if (!confirm(`使用提示会扣 ${price} 金币，并显示一个提示。\n\n选择题：隐藏一个错误选项。\n多选题：显示其中一个正确答案。\n填充题：显示答案开头。\n\n每题最多使用 1 次；用了提示后不能 Perfect Kill / Perfect Boss。\n\n确定使用？`)) return;
+
+    const r = await spendCoins(price, `使用提示 -${price}`, currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey]);
+    if (!r || !r.ok) return alert((r && r.error) || '扣金币失败');
+
+    q.hintUsed = true;
+    hintUsedThisQuiz = true;
+
+    if (q.type === 'radio') {
+      const ans = String(q.answer || '').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+      const labels = Array.from(div.querySelectorAll('.option-label'));
+      const wrongLabels = labels.filter(lbl => {
+        const inp = lbl.querySelector('input');
+        return inp && !ans.includes(String(inp.value || '').toUpperCase());
+      });
+      if (wrongLabels.length) wrongLabels[Math.floor(Math.random()*wrongLabels.length)].style.display='none';
+      fb.innerHTML += `<br><span style="color:#7c3aed">💡 已隐藏 1 个错误选项。</span>`;
+    } else if (q.type === 'checkbox') {
+      const ans = String(q.answer || '').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+      const one = ans.find(a => q[a]) || ans[0] || '';
+      fb.innerHTML += `<br><span style="color:#7c3aed">💡 提示：其中一个正确答案是 ${q[one] || one}</span>`;
+    } else {
+      const a = String(q.answer || '').split(',')[0] || '';
+      fb.innerHTML += `<br><span style="color:#7c3aed">💡 提示：答案开头是「${escapeHtml(a.slice(0, Math.min(3, a.length)))}...」</span>`;
+    }
+    updateHeader();
+  }
+
   function nextQ(){
     const qa = document.getElementById('question-area');
     qa.innerHTML = ''; updateUI(0);
@@ -1537,8 +1943,16 @@ document.addEventListener('DOMContentLoaded', () => {
     div.appendChild(opts);
 
     const fb = document.createElement('div'); fb.className='feedback'; div.appendChild(fb);
+    const hintBtn = document.createElement('button');
+    hintBtn.className = 'btn ghost small';
+    const hintPrice = currentMode === 'boss' ? 25 : (currentMode === 'monster' ? 15 : 10);
+    hintBtn.textContent = `💡 看提示 -${hintPrice}金币`;
+    hintBtn.title = `扣 ${hintPrice} 金币显示提示；每题只能使用 1 次。`;
+    hintBtn.setAttribute('aria-label', `看提示，扣 ${hintPrice} 金币`);
+    hintBtn.onclick = () => useHintForQuestion(q, div, fb);
+    div.appendChild(hintBtn);
     const sb = document.createElement('button'); sb.className='btn'; sb.textContent='提交';
-    sb.onclick = () => {
+    sb.onclick = async () => {
       let ua=[];
       if (q.type==='text'){
         ua = document.getElementById('txtAns').value.split(',').map(s=>s.trim()).filter(Boolean);
@@ -1620,10 +2034,13 @@ document.addEventListener('DOMContentLoaded', () => {
       div.appendChild(nb);
 
       if (currentMode !== 'practice' && playerHp <= 0) {
-        battleEndedByDeath = true;
-        fb.innerHTML += '<br><span style="color:#b91c1c">💀 你被怪兽击败了，本次挑战失败，没有EXP。</span>';
-        nb.textContent = '查看结果';
-        queue = [];
+        const revived = await tryReviveAfterDeath(fb, nb);
+        if (!revived) {
+          battleEndedByDeath = true;
+          fb.innerHTML += '<br><span style="color:#b91c1c">💀 你被怪兽击败了，本次挑战失败，没有EXP。</span>';
+          nb.textContent = '查看结果';
+          queue = [];
+        }
       }
 
       if (!isC && currentMode !== 'boss' && !battleEndedByDeath){
@@ -1759,7 +2176,7 @@ document.addEventListener('DOMContentLoaded', () => {
       battleMsg = correct > 0 ? `✅ 已答对 ${correct} 题，会标记为已掌握；系统每星期自动从错题本删除。答错的会继续保留。` : '❌ 仍需再练，错题会继续保留在错题本。';
     } else if (currentMode === 'monster') {
       const kill = !battleEndedByDeath && accuracy >= 0.70;
-      const perfect = !battleEndedByDeath && accuracy >= 0.90;
+      const perfect = !battleEndedByDeath && !reviveUsed && !hintUsedThisQuiz && accuracy >= 0.90;
       if (kill) exp += 20;
       if (perfect) exp += 30;
       if (battleEndedByDeath) exp = 0;
@@ -1772,14 +2189,14 @@ document.addEventListener('DOMContentLoaded', () => {
       battleMsg = battleEndedByDeath
         ? `💀 挑战失败！你被小怪击败了，建议先做普通练习。`
         : (kill
-          ? (perfect ? `💀 Perfect Kill！小怪已死亡，7天后复活。` : `💀 小怪已击败，进入复活倒数。`)
+          ? (perfect ? `💀 Perfect Kill！小怪已死亡，6天后复活。` : `💀 小怪已击败，6天后复活倒数。`)
           : `⚠️ 挑战失败！未达到击杀门槛（需要 ≥70%），小怪仍存活。`);
     } else if (currentMode === 'boss') {
       if (battleEndedByDeath) exp = 0;
-      else if (accuracy >= 0.90) exp += 150;
+      else if (!reviveUsed && accuracy >= 0.90) exp += 150;
       else if (accuracy >= 0.70) exp += 60;
       else if (accuracy >= 0.50) exp += 25;
-      coinReward = calculateCoinReward(currentMode, accuracyPct, false, false, !battleEndedByDeath && accuracy >= 0.90);
+      coinReward = calculateCoinReward(currentMode, accuracyPct, false, false, !battleEndedByDeath && !reviveUsed && !hintUsedThisQuiz && accuracy >= 0.90);
 
       if (!battleEndedByDeath) {
         fireGameAction({
@@ -1800,13 +2217,19 @@ document.addEventListener('DOMContentLoaded', () => {
       battleMsg = accuracy >= 0.70 ? '📘 练习完成，已记录成绩。' : '📘 练习完成。';
     }
 
+    const boostActive = shopProfile.activeBoost && Number(shopProfile.activeBoost.endAt || 0) > Date.now() && currentMode !== 'wrongbook' && exp > 0;
+    if (boostActive) {
+      exp = Math.round(exp * Number(shopProfile.activeBoost.multiplier || 2));
+      battleMsg += `｜⚡ 2倍经验生效`;
+    }
+
     currentExpGain = exp;
     lastAccuracyPct = accuracyPct;
     lastCoinReward = coinReward || { baseCoins:0, penaltyCoins:0, bonusCoins:0, finalCoins:0, note:'' };
     const quizIdForExp = currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey];
 
     if (exp > 0 && currentMode !== 'wrongbook') {
-      fireGameAction({ action:'addExp', book, name:user, quizId:quizIdForExp, amount:String(exp), reason:currentMode });
+      fireGameAction({ action:'addExp', book, name:user, quizId:quizIdForExp, amount:String(exp), reason:currentMode, boostApplied: boostActive ? 'true' : 'false' });
     }
 
     // 本地先显示经验，不等待 Sheet 回应。
@@ -1817,7 +2240,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateHeader(Number(progressState.level || 1));
 
     document.getElementById('finish-msg').textContent = `恭喜 ${displayUser || user}，本次完成！`;
-    document.getElementById('stats').textContent = `模式：${modeLabel(currentMode)}｜得分: ${score}｜正确率: ${accuracyPct}%｜答对 ${correct} 题｜答错 ${wrong} 题｜用时：${formatDuration(usedSeconds)}｜EXP +${currentExpGain}`;
+    document.getElementById('stats').textContent = `模式：${modeLabel(currentMode)}｜得分: ${score}｜正确率: ${accuracyPct}%｜答对 ${correct} 题｜答错 ${wrong} 题｜用时：${formatDuration(usedSeconds)}｜EXP +${currentExpGain}${reviveUsed ? '｜已使用复活' : ''}`;
     document.getElementById('battle-result').textContent = battleMsg;
     document.getElementById('submit-status').textContent = '正在送出成绩…';
 
