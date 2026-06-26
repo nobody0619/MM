@@ -95,6 +95,7 @@
     .hp-fill.player{background:linear-gradient(90deg,#22c55e,#10b981)}
     .hp-text{font-size:12px;color:var(--muted);white-space:nowrap;min-width:46px;text-align:right}
     .combat-msg{font-size:13px;color:var(--muted);margin-top:8px;min-height:18px}
+    .hint-note{font-size:12px;color:var(--muted);margin:6px 0 10px;line-height:1.45}
     .hit{animation:hitShake .25s ease}
     .attack{animation:attackMove .25s ease}
     .heal{animation:healPulse .35s ease}
@@ -383,7 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.06.26.1';
+  const APP_VERSION = '2026.06.26.2';
   const SKIP_SERVER_LOGIN = true; // 紧急稳定模式：登入不等待 Apps Script，避免学生卡在登入
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -1951,6 +1952,10 @@ document.addEventListener('DOMContentLoaded', () => {
     hintBtn.setAttribute('aria-label', `看提示，扣 ${hintPrice} 金币`);
     hintBtn.onclick = () => useHintForQuestion(q, div, fb);
     div.appendChild(hintBtn);
+    const hintNote = document.createElement('div');
+    hintNote.className = 'hint-note';
+    hintNote.textContent = `扣 ${hintPrice} 金币显示提示，每题只能用 1 次；点击后会先确认。`;
+    div.appendChild(hintNote);
     const sb = document.createElement('button'); sb.className='btn'; sb.textContent='提交';
     sb.onclick = async () => {
       let ua=[];
