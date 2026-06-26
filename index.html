@@ -206,7 +206,7 @@
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.06.26.4</div>
+    <div class="version-tag" id="versionTag">版本：2026.06.26.5</div>
   </div>
 </div>
 
@@ -251,7 +251,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.06.26.4</div>
+    <div class="version-tag">版本：2026.06.26.5</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.06.26.4';
+  const APP_VERSION = '2026.06.26.5';
   const SKIP_SERVER_LOGIN = true; // 紧急稳定模式：登入不等待 Apps Script，避免学生卡在登入
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -864,6 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => loadQuestionCountsFallbackFromCsv(), 2500);
       setTimeout(() => { loadCoins(); loadShopProfile(); }, 1800);
       setTimeout(() => preloadVisibleQuestionBanks(), 1500);
+      setTimeout(() => startAutoRetryPendingScores(), 2200);
 
       // 后台慢慢补上怪兽状态，不阻塞学生做练习。
       setTimeout(() => {
@@ -2529,7 +2530,14 @@ document.addEventListener('DOMContentLoaded', () => {
       s.onerror = () => { cleanup(); reject(new Error('JSONP error')); };
       function cleanup(){
         clearTimeout(timer);
-        try { delete window[cb]; } catch(e) { window[cb] = undefined; }
+        // Apps Script may answer after our timeout. Keep a no-op callback briefly
+        // so late JSONP responses do not throw "cb_x is not defined".
+        try {
+          window[cb] = () => {};
+          setTimeout(() => { try { delete window[cb]; } catch(e) { window[cb] = undefined; } }, 60000);
+        } catch(e) {
+          window[cb] = undefined;
+        }
         s.remove();
       }
       s.src = SCRIPT_URL + '?' + q.toString();
@@ -2573,8 +2581,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function submitPayloadHybrid(payload){
+    submitQueueBeacon(payload);
     try {
-      const r = await jsonpApi({ ...payload, action:'submitToQueue' }, 12000);
+      const r = await jsonpApi({ ...payload, action:'submitToQueue' }, 30000);
       if (r && r.ok) return r;
       throw new Error((r && r.error) || 'submit failed');
     } catch(e) {
@@ -2582,8 +2591,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function verifyScoreSubmit(payload){
-    for (let i = 0; i < 3; i++) {
+  async function verifyScoreSubmit(payload, attempts){
+    const maxAttempts = attempts == null ? 5 : attempts;
+    for (let i = 0; i < maxAttempts; i++) {
       try {
         const r = await jsonpApi({
           action:'verifySubmit',
@@ -2592,7 +2602,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 7000);
         if (r && r.ok && r.found) return r;
       } catch(e) {}
-      await new Promise(resolve => setTimeout(resolve, 1200 + i * 1200));
+      await new Promise(resolve => setTimeout(resolve, Math.min(8000, 1500 + i * 1500)));
     }
     return { ok:false, found:false };
   }
@@ -2653,7 +2663,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       await submitPayloadHybrid(payload);
-      const verified = await verifyScoreSubmit(payload);
+      const verified = await verifyScoreSubmit(payload, 4);
       if (!verified || !verified.found) throw new Error('成绩尚未在 SubmitQueue/Score 中确认');
       document.getElementById('submit-status').textContent = verified.processed
         ? '✅ 成绩已确认写入成绩表'
@@ -2664,8 +2674,8 @@ document.addEventListener('DOMContentLoaded', () => {
       savePendingScore(payload);
       submitQueueBeacon(payload);
       document.getElementById('submit-status').innerHTML =
-        '⚠️ 成绩还没确认写入，已暂存在本机。请点“补交成绩”，或截图给老师。 ' +
-        '<button class="btn small secondary" onclick="window.retryPendingScores && window.retryPendingScores()">补交成绩</button>';
+        '⚠️ 成绩还没确认写入，已暂存在本机，系统会自动补交。';
+      startAutoRetryPendingScores();
     } finally {
       setLoading(false);
     }
@@ -2679,6 +2689,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const kept = arr.filter(x => String(x.submitId || '') !== id);
       kept.push(payload);
       localStorage.setItem(key, JSON.stringify(kept.slice(-20)));
+      startAutoRetryPendingScores();
     } catch(e) {}
   }
 
@@ -2690,20 +2701,20 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) {}
   }
 
-  window.retryPendingScores = async function(){
+  async function retryPendingScoresOnce(showLoading){
     const key = 'kee_pending_scores_v1';
     let arr = [];
     try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { arr = []; }
-    if (!arr.length) return alert('没有待补交成绩。');
+    if (!arr.length) return { sent:0, remain:0 };
 
-    setLoading(true, '正在补交成绩...');
+    if (showLoading) setLoading(true, '正在自动补交成绩...');
     let sent = 0;
     const remain = [];
 
     for (const item of arr) {
       try {
         await submitPayloadHybrid({ ...item, action:'submitToQueue' });
-        const verified = await verifyScoreSubmit(item);
+        const verified = await verifyScoreSubmit(item, 3);
         if (verified && verified.found) sent++;
         else {
           submitQueueBeacon({ ...item, action:'submitToQueue' });
@@ -2718,8 +2729,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (remain.length) localStorage.setItem(key, JSON.stringify(remain.slice(-20)));
     else localStorage.removeItem(key);
 
-    setLoading(false);
-    alert(`补交完成：已送出 ${sent} 份；${remain.length} 份仍暂存在本机。`);
+    if (showLoading) setLoading(false);
+    const status = document.getElementById('submit-status');
+    if (status && sent) {
+      status.textContent = remain.length
+        ? `✅ 已自动补交 ${sent} 份；还有 ${remain.length} 份继续自动补交中。`
+        : `✅ 成绩已自动补交并确认写入。`;
+    } else if (status && remain.length) {
+      status.textContent = `⚠️ 成绩仍在自动补交中。`;
+    }
+    return { sent, remain:remain.length };
+  }
+
+  window.retryPendingScores = () => retryPendingScoresOnce(true);
+
+  function startAutoRetryPendingScores(){
+    if (startAutoRetryPendingScores.timer) return;
+    startAutoRetryPendingScores.timer = setInterval(async () => {
+      const result = await retryPendingScoresOnce(false);
+      if (!result.remain) {
+        clearInterval(startAutoRetryPendingScores.timer);
+        startAutoRetryPendingScores.timer = null;
+      }
+    }, 15000);
+    setTimeout(() => retryPendingScoresOnce(false), 2500);
   }
 
   function daysLeft(ts){
