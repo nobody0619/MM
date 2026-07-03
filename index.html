@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.07.03.1';
+  const APP_VERSION = '2026.07.03.2';
   const SKIP_SERVER_LOGIN = false;
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -2717,14 +2717,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     for (const item of arr) {
       try {
+        const verifiedFirst = await verifyScoreSubmit(item, 2);
+        if (verifiedFirst && verifiedFirst.processed) { sent++; continue; }
+        if (verifiedFirst && verifiedFirst.found) { remain.push(item); continue; }
+
         await submitPayloadHybrid({ ...item, action:'submitToQueue' });
         const verified = await verifyScoreSubmit(item, 3);
         if (verified && verified.processed) sent++;
-        else if (verified && verified.found) { submitQueueBeacon({ ...item, action:'submitToQueue' }); remain.push(item); }
-        else {
-          submitQueueBeacon({ ...item, action:'submitToQueue' });
-          remain.push(item);
-        }
+        else remain.push(item);
       } catch(e) {
         submitQueueBeacon({ ...item, action:'submitToQueue' });
         remain.push(item);
