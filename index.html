@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.07.03.3';
+  const APP_VERSION = '2026.07.03.4';
   const SKIP_SERVER_LOGIN = false;
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -712,7 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const buyId = 'SHOP|' + book + '|' + (displayUser || user) + '|' + itemId + '|' + Date.now();
       const r = await apiFetch({ action:'buyShopItem', book, name:user, itemId, activate: activate ? 'true' : 'false', buyId }, 1);
-      if (!r.ok) return alert(r.error || '购买失败');
+      if (!r.ok) return alert(r.error === '\u91d1\u5e01\u4e0d\u8db3' ? `\u91d1\u5e01\u4e0d\u8db3\uff0c\u8fd8\u5dee ${Math.max(0, Number(r.need || 0) - Number(r.coins || 0)).toFixed(1)} \u91d1\u5e01\u3002` : (r.error || '\u8d2d\u4e70\u5931\u8d25'));
       await Promise.all([loadCoins(), loadShopProfile()]);
       alert(r.message || '购买成功');
       openShop(item.type === 'boost' ? 'useful' : item.type);
@@ -729,7 +729,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setLoading(true, '正在装备...');
     try {
       const r = await apiFetch({ action:'equipShopItem', book, name:user, itemId }, 1);
-      if (!r.ok) return alert(r.error || '装备失败');
+      if (!r.ok) return alert(r.error === '\u91d1\u5e01\u4e0d\u8db3' ? `\u91d1\u5e01\u4e0d\u8db3\uff0c\u8fd8\u5dee ${Math.max(0, Number(r.need || 0) - Number(r.coins || 0)).toFixed(1)} \u91d1\u5e01\u3002` : (r.error || '\u8d2d\u4e70\u5931\u8d25'));
       await loadShopProfile();
       openShop(item.type);
     } catch(e) { alert('装备失败：' + e); }
@@ -744,7 +744,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setLoading(true, '正在卖回...');
     try {
       const r = await apiFetch({ action:'sellShopItem', book, name:user, itemId }, 1);
-      if (!r.ok) return alert(r.error || '卖回失败');
+      if (!r.ok) return alert(r.error === '\u91d1\u5e01\u4e0d\u8db3' ? `\u91d1\u5e01\u4e0d\u8db3\uff0c\u8fd8\u5dee ${Math.max(0, Number(r.need || 0) - Number(r.coins || 0)).toFixed(1)} \u91d1\u5e01\u3002` : (r.error || '\u8d2d\u4e70\u5931\u8d25'));
       await Promise.all([loadCoins(), loadShopProfile()]);
       alert(r.message || `卖回成功，退回 ${refund} 金币。`);
       openShop(item.type);
@@ -1397,6 +1397,7 @@ document.addEventListener('DOMContentLoaded', () => {
         forgetPendingWrongBook(fullPayload);
         return true;
       }
+      if (r && r.retry) return false;
       throw new Error((r && r.error) || 'WrongBook submit failed');
     } catch(e) {}
 
@@ -1803,7 +1804,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setLoading(true, '正在嘲讽小怪...');
     try {
       const r = await apiFetch({ action:'tauntMonster', book, name:user, monsterId }, 1);
-      if (!r.ok) return alert(r.error || '嘲讽失败');
+      if (!r.ok) return alert(r.error === '\u91d1\u5e01\u4e0d\u8db3' ? `\u91d1\u5e01\u4e0d\u8db3\uff0c\u8fd8\u5dee ${Math.max(0, Number(r.need || 0) - Number(r.coins || 0)).toFixed(1)} \u91d1\u5e01\u3002` : (r.error || '\u8d2d\u4e70\u5931\u8d25'));
       clearLocalMonsterLock(monsterId);
       alert('😈 小怪被你嘲讽醒了！可以马上再挑战。');
       await loadCoins();
@@ -2410,7 +2411,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const accuracy = firstTryTotal ? Math.max(0, Math.min(1, firstTryCorrect / firstTryTotal)) : 0;
     const accuracyPct = Math.round(accuracy * 100);
     let battleMsg = '';
-    let exp = 10;
+    let exp = calcQuestionScaledExp(currentMode, qs.length, accuracy, battleEndedByDeath, reviveUsed, hintUsedThisQuiz);
     let coinReward = { baseCoins:0, penaltyCoins:0, bonusCoins:0, finalCoins:0, note:'' };
     if (battleEndedByDeath && currentMode !== 'practice') exp = 0;
 
@@ -2422,9 +2423,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (currentMode === 'monster') {
       const kill = !battleEndedByDeath && accuracy >= 0.70;
       const perfect = !battleEndedByDeath && !reviveUsed && !hintUsedThisQuiz && accuracy >= 0.90;
-      if (kill) exp += 20;
-      if (perfect) exp += 30;
-      if (battleEndedByDeath) exp = 0;
       coinReward = calculateCoinReward(currentMode, accuracyPct, kill, perfect, false);
 
       if (!battleEndedByDeath) {
@@ -2438,10 +2436,6 @@ document.addEventListener('DOMContentLoaded', () => {
           ? (perfect ? `💀 Perfect Kill！小怪已死亡，6天后复活。` : `💀 小怪已击败，6天后复活倒数。`)
           : `⚠️ 挑战失败！未达到击杀门槛（需要 ≥70%），小怪仍存活。`);
     } else if (currentMode === 'boss') {
-      if (battleEndedByDeath) exp = 0;
-      else if (!reviveUsed && accuracy >= 0.90) exp += 150;
-      else if (accuracy >= 0.70) exp += 60;
-      else if (accuracy >= 0.50) exp += 25;
       coinReward = calculateCoinReward(currentMode, accuracyPct, false, false, !battleEndedByDeath && !reviveUsed && !hintUsedThisQuiz && accuracy >= 0.90);
 
       if (!battleEndedByDeath) {
@@ -2514,6 +2508,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function calcLevel(exp){
     return Math.max(1, Math.floor(Number(exp || 0) / 100) + 1);
+  }
+
+  function calcQuestionScaledExp(mode, questionCount, accuracy, battleEnded, reviveUsedFlag, hintUsedFlag){
+    if (mode === 'wrongbook' || battleEnded) return 0;
+    const n = Math.max(1, Number(questionCount || 0));
+    const acc = Math.max(0, Math.min(1, Number(accuracy || 0)));
+    const noHelp = !reviveUsedFlag && !hintUsedFlag;
+    if (mode === 'practice') {
+      return Math.max(5, Math.round(n * 1.2));
+    }
+    if (mode === 'monster') {
+      let exp = Math.max(8, Math.round(n * 1.5));
+      if (acc >= 0.70) exp += Math.max(10, Math.round(n * 1.0));
+      if (noHelp && acc >= 0.90) exp += Math.max(15, Math.round(n * 1.5));
+      return exp;
+    }
+    if (mode === 'boss') {
+      let exp = Math.max(20, Math.round(n * 2.0));
+      if (noHelp && acc >= 0.90) exp += Math.max(50, Math.round(n * 2.5));
+      else if (acc >= 0.70) exp += Math.max(25, Math.round(n * 1.5));
+      else if (acc >= 0.50) exp += Math.max(10, Math.round(n * 0.8));
+      return exp;
+    }
+    return Math.max(5, Math.round(n));
   }
 
   function modeLabel(m){
