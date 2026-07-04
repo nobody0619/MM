@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.07.03.4';
+  const APP_VERSION = '2026.07.04.1';
   const SKIP_SERVER_LOGIN = false;
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -499,15 +499,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   function ensureLatestVersion_(){
-    // 安全版：不自动 location.replace。
-    // 之前版本更新 / 后台动作完成时，可能让学生做到一半跳回首页。
-    // 这里只记录版本；需要更新时由老师/学生手动点“更新页面”。
     try{
       const key = 'kee_quiz_app_version';
       localStorage.setItem(key, APP_VERSION);
+      checkOnlineVersionOnce();
+      setInterval(checkOnlineVersionOnce, 5 * 60 * 1000);
     }catch(_){}
   }
 
+  async function checkOnlineVersionOnce(){
+    try {
+      const url = location.pathname + '?versionCheck=' + Date.now();
+      const html = await fetch(url, { cache:'no-store' }).then(r => r.ok ? r.text() : '');
+      const m = html.match(/const APP_VERSION = '([^']+)'/);
+      const onlineVersion = m && m[1];
+      if (!onlineVersion || onlineVersion === APP_VERSION) return;
+      if (isQuizActive) return;
+      const u = new URL(location.href);
+      u.searchParams.set('v', onlineVersion);
+      u.searchParams.set('reload', String(Date.now()));
+      location.replace(u.toString());
+    } catch(e) {}
+  }
   async function handleInstallToHome(){
     const ua = navigator.userAgent || '';
     const isIOS = /iphone|ipad|ipod/i.test(ua);
@@ -1992,7 +2005,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 1. 标准答案：A / B / C 或 A,B,C
       if (optionLetters.includes(upper)) {
-        lines.push(q[upper] || upper);
+        lines.push(escapeHtml(q[upper] || upper));
         return;
       }
 
@@ -2002,7 +2015,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const n = Number(token);
         if (n >= 1 && n <= filled.length) {
           const letter = filled[n - 1];
-          lines.push(q[letter] || letter);
+          lines.push(escapeHtml(q[letter] || letter));
           return;
         }
       }
@@ -2011,7 +2024,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const normToken = normalizeAnswerText_(token);
       const matchedLetter = optionLetters.find(l => normalizeAnswerText_(q[l]) === normToken);
       if (matchedLetter) {
-        lines.push(q[matchedLetter]);
+        lines.push(escapeHtml(q[matchedLetter]));
         return;
       }
 
@@ -2021,17 +2034,39 @@ document.addEventListener('DOMContentLoaded', () => {
         return text.includes(`(${token})`) || text.includes(`（${token}）`);
       });
       if (parenMatched) {
-        lines.push(q[parenMatched]);
+        lines.push(escapeHtml(q[parenMatched]));
         return;
       }
 
       // 5. 最后 fallback：至少显示 answer 原文，不要空白
-      lines.push(token);
+      lines.push(escapeHtml(token));
     });
 
     return lines.length ? lines.join('<br>') : '<span style="color:#b91c1c">答案无法显示，请检查 CSV 的 answer。</span>';
   }
 
+  function getAcceptedAnswerLetters(q){
+    const optionLetters = Array.from({length:MAX_OPTS}, (_,i)=>String.fromCharCode(65+i));
+    const out = new Set();
+    String(q.answer || '').split(',').map(s=>s.trim()).filter(Boolean).forEach(token => {
+      const upper = token.toUpperCase();
+      if (optionLetters.includes(upper)) { out.add(upper); return; }
+      if (/^\d+$/.test(token)) {
+        const filled = optionLetters.filter(l => q[l]);
+        const n = Number(token);
+        if (n >= 1 && n <= filled.length) { out.add(filled[n - 1]); return; }
+      }
+      const normToken = normalizeAnswerText_(token);
+      const matched = optionLetters.find(l => normalizeAnswerText_(q[l]) === normToken);
+      if (matched) { out.add(matched); return; }
+      const parenMatched = optionLetters.find(l => {
+        const text = String(q[l] || '');
+        return text.includes(`(${token})`) || text.includes(`（${token}）`);
+      });
+      if (parenMatched) out.add(parenMatched);
+    });
+    return Array.from(out);
+  }
   function normalizeAnswerText_(v){
     return String(v || '')
       .trim()
@@ -2127,7 +2162,7 @@ document.addEventListener('DOMContentLoaded', () => {
     hintUsedThisQuiz = true;
 
     if (q.type === 'radio') {
-      const ans = String(q.answer || '').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+      const ans = getAcceptedAnswerLetters(q);
       const labels = Array.from(div.querySelectorAll('.option-label'));
       const wrongLabels = labels.filter(lbl => {
         const inp = lbl.querySelector('input');
@@ -2136,9 +2171,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (wrongLabels.length) wrongLabels[Math.floor(Math.random()*wrongLabels.length)].style.display='none';
       fb.innerHTML += `<br><span style="color:#7c3aed">💡 已隐藏 1 个错误选项。</span>`;
     } else if (q.type === 'checkbox') {
-      const ans = String(q.answer || '').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+      const ans = getAcceptedAnswerLetters(q);
       const one = ans.find(a => q[a]) || ans[0] || '';
-      fb.innerHTML += `<br><span style="color:#7c3aed">💡 提示：其中一个正确答案是 ${q[one] || one}</span>`;
+      fb.innerHTML += `<br><span style="color:#7c3aed">💡 提示：其中一个正确答案是 ${escapeHtml(q[one] || one)}</span>`;
     } else {
       const a = String(q.answer || '').split(',')[0] || '';
       fb.innerHTML += `<br><span style="color:#7c3aed">💡 提示：答案开头是「${escapeHtml(a.slice(0, Math.min(3, a.length)))}...」</span>`;
@@ -2214,16 +2249,16 @@ document.addEventListener('DOMContentLoaded', () => {
         isC = lows.some(v=>ansList.includes(v));
       } else if (q.type === 'checkbox') {
         const uaA = ua.map(s=>s.toUpperCase()).sort().join(',');
-        const caA = String(q.answer||'').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean).sort().join(',');
+        const caA = getAcceptedAnswerLetters(q).sort().join(',');
         isC = uaA === caA;
       } else {
-        const accept = String(q.answer||'').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+        const accept = getAcceptedAnswerLetters(q);
         isC = ua.length === 1 && accept.includes(ua[0].toUpperCase());
       }
 
       const allAnsHtml = (() => {
         if (q.type === 'text') {
-          const t = String(q.answer||'').split(',').map(s=>s.trim()).filter(Boolean).map((s,i)=>`${i+1}. ${s}`).join('<br>');
+          const t = String(q.answer||'').split(',').map(s=>s.trim()).filter(Boolean).map((s,i)=>`${i+1}. ${escapeHtml(s)}`).join('<br>');
           return t || '<span style="color:#b91c1c">答案栏为空，请检查 CSV 的 answer。</span>';
         }
         return getCorrectAnswerHtml(q);
@@ -2269,7 +2304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      const explainLine = q.explain ? `<br><span style="font-weight:normal">${String(q.explain)}</span>` : '';
+      const explainLine = q.explain ? `<br><span style="font-weight:normal">${escapeHtml(String(q.explain))}</span>` : '';
       fb.innerHTML = isC
         ? `正确! ${delta>0?'+':''}${delta}<br>正确答案：<br>${allAnsHtml}${explainLine}`
         : `错误! ${delta}<br>正确答案：<br>${allAnsHtml}${explainLine}`;
