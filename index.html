@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.07.07.4';
+  const APP_VERSION = '2026.07.07.5';
   const SKIP_SERVER_LOGIN = false;
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -577,6 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
     {itemId:'boost_exp2_30', type:'boost', name:'2å€ç»éªŒå· 30åˆ†é’Ÿ', icon:'âš¡', price:150, desc:'30åˆ†é’Ÿå†… EXP x2ï¼Œæ™®é€šç»ƒä¹ /å°æ€ª/Boss éƒ½é€‚ç”¨'},
     {itemId:'boost_exp2_60', type:'boost', name:'2å€ç»éªŒå· 1å°æ—¶', icon:'âš¡', price:250, desc:'1å°æ—¶å†… EXP x2ï¼Œæ™®é€šç»ƒä¹ /å°æ€ª/Boss éƒ½é€‚ç”¨'},
     {itemId:'boost_exp2_120', type:'boost', name:'2å€ç»éªŒå· 2å°æ—¶', icon:'âš¡', price:400, desc:'2å°æ—¶å†… EXP x2ï¼Œæ™®é€šç»ƒä¹ /å°æ€ª/Boss éƒ½é€‚ç”¨'},
+    {itemId:'boost_exp3_15', type:'boost', name:'3倍经验卷 15分钟', icon:'⚡⚡', price:500, desc:'15分钟内 EXP x3，普通练习/小怪/Boss 都适用'},
     {itemId:'title_01', type:'title', name:'æ–°æ‰‹å‹‡è€…', icon:'ðŸŒ±', price:300},
     {itemId:'title_02', type:'title', name:'å°æ€ªçŒŽäºº', icon:'âš”ï¸', price:800},
     {itemId:'title_03', type:'title', name:'è¿žèƒœæŒ‘æˆ˜è€…', icon:'ðŸ”¥', price:1500},
@@ -626,17 +627,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const left = Math.max(0, Number(b.endAt) - Date.now());
       const mm = Math.floor(left / 60000);
       const ss = Math.floor((left % 60000) / 1000);
-      txt = `ï½œâš¡2å€EXPå‰©ä½™ ${mm}:${String(ss).padStart(2,'0')}`;
+      txt = ` | x${Number(b.multiplier || 2)} EXP ${mm}:${String(ss).padStart(2,'0')}`;
     }
     const el = document.getElementById('statExp');
     if (el && !el.dataset.base) el.dataset.base = el.textContent || '';
     if (el) {
       const exp = Number(progressState.exp || 0);
       const progress = exp % 100;
-      el.textContent = `âš¡${progress} / 100 ${txt}`;
+      el.textContent = `⚡${progress} / 100 ${txt}`;
     }
   }
-
   async function loadShopProfile(){
     try {
       const r = await apiFetch({ action:'getShopProfile', book, name:user }, 2);
