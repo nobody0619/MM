@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.07.08.1';
+  const APP_VERSION = '2026.07.09.1';
   const SKIP_SERVER_LOGIN = false;
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -2613,90 +2613,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function submitByHiddenForm(payload){
-    return new Promise(resolve => {
-      const form = document.getElementById('postForm');
-      form.setAttribute('action', SCRIPT_URL);
-
-      const set = (name, value) => {
-        const el = form.elements[name];
-        if (el) el.value = value == null ? '' : String(value);
-      };
-
-      set('action', payload.action || 'submitToQueue');
-      set('submitId', payload.submitId || '');
-      set('book', payload.book || '');
-      set('quizId', payload.quizId || '');
-      set('name', payload.name || '');
-      set('score', payload.score || 0);
-      set('correct', payload.correct || 0);
-      set('wrong', payload.wrong || 0);
-      set('rawCorrect', payload.rawCorrect || 0);
-      set('rawWrong', payload.rawWrong || 0);
-      set('accuracyPct', payload.accuracyPct || 0);
-      set('time', payload.time || 0);
-      set('mode', payload.mode || '');
-      set('expGained', payload.expGained || 0);
-      set('coinBase', payload.coinBase || 0);
-      set('coinPenalty', payload.coinPenalty || 0);
-      set('coinBonus', payload.coinBonus || 0);
-      set('coinFinal', payload.coinFinal || 0);
-      set('coinNote', payload.coinNote || '');
-
-      try { form.submit(); } catch(e) {}
-      setTimeout(() => resolve({ ok:true, via:'form' }), 1200);
-    });
-  }
-
   async function submitPayloadHybrid(payload){
     try {
-      const r = await jsonpApi({ ...payload, action:'submitToQueue' }, 30000);
+      const r = await jsonpApi({ ...payload, action:'submitToQueue' }, 45000);
       if (r && r.ok) return r;
       throw new Error((r && r.error) || 'submit failed');
     } catch(e) {
       throw e;
-    }
-  }
-
-  async function verifyScoreSubmit(payload, attempts){
-    const maxAttempts = attempts == null ? 5 : attempts;
-    for (let i = 0; i < maxAttempts; i++) {
-      try {
-        const r = await jsonpApi({
-          action:'verifySubmit',
-          book:payload.book,
-          submitId:payload.submitId
-        }, 7000);
-        if (r && r.ok && r.found) return r;
-      } catch(e) {}
-      await new Promise(resolve => setTimeout(resolve, Math.min(8000, 1500 + i * 1500)));
-    }
-    return { ok:false, found:false };
-  }
-
-
-  function submitQueueBeacon(params){
-    // 三通道备用提交：GET Image + GET fetch + hidden form POST，全部用同一个 submitId，Apps Script 会自动防重复。
-    let ok = false;
-    try {
-      const payload = { ...params, action:'submitToQueue', v:APP_VERSION, _:String(Date.now()) };
-      const q = new URLSearchParams(payload);
-      const url = SCRIPT_URL + '?' + q.toString();
-
-      const img = new Image();
-      img.referrerPolicy = 'no-referrer';
-      img.src = url;
-      window.__scoreBeacons = window.__scoreBeacons || [];
-      window.__scoreBeacons.push(img);
-      setTimeout(() => {
-        try { window.__scoreBeacons = (window.__scoreBeacons || []).slice(-30); } catch(e) {}
-      }, 8000);
-      ok = true;
-
-
-      return ok;
-    } catch(e) {
-      return ok;
     }
   }
 
@@ -2727,22 +2650,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setLoading(true, '正在送出成绩...');
 
     try {
-      await submitPayloadHybrid(payload);
-      const verified = await verifyScoreSubmit(payload, 4);
-      if (!verified || !verified.found) throw new Error('成绩尚未在 SubmitQueue/Score 中确认');
-      if (verified.processed) {
-        document.getElementById('submit-status').textContent = '✅ 成绩已确认写入成绩表';
-        removePendingScore(payload.submitId);
-      } else {
-        document.getElementById('submit-status').textContent = '✅ 成绩已进入 SubmitQueue，正在等待写入成绩表。';
-        removePendingScore(payload.submitId);
-      }
+      const result = await submitPayloadHybrid(payload);
+      if (!result || !result.ok || !result.queued) throw new Error('成绩未进入 SubmitQueue');
+      document.getElementById('submit-status').textContent = '✅ 成绩已提交';
+      removePendingScore(payload.submitId);
     } catch(e) {
       console.error(e);
       savePendingScore(payload);
-      submitQueueBeacon(payload);
       document.getElementById('submit-status').innerHTML =
-        '⚠️ 成绩还没确认写入，已暂存在本机，系统会自动补交。';
+        '⚠️ 网络暂时不稳定，成绩已保存在本机，系统会自动补交。';
       startAutoRetryPendingScores();
     } finally {
       setLoading(false);
@@ -2781,22 +2697,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     for (const item of arr) {
       try {
-        const verifiedFirst = await verifyScoreSubmit(item, 2);
-        if (verifiedFirst && verifiedFirst.found) { sent++; continue; }
-
-        await submitPayloadHybrid({ ...item, action:'submitToQueue' });
-        const verified = await verifyScoreSubmit(item, 3);
-        if (verified && verified.found) sent++;
+        const result = await submitPayloadHybrid({ ...item, action:'submitToQueue' });
+        if (result && result.ok && result.queued) sent++;
         else remain.push(item);
       } catch(e) {
-        const now = Date.now();
-        const lastRetryAt = Number(item.lastRetryAt || 0);
-        if (!lastRetryAt || now - lastRetryAt > 120000) {
-          submitQueueBeacon({ ...item, action:'submitToQueue' });
-          remain.push({ ...item, lastRetryAt:now });
-        } else {
-          remain.push(item);
-        }
+        remain.push({ ...item, lastRetryAt:Date.now() });
       }
     }
 
@@ -2825,8 +2730,8 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(startAutoRetryPendingScores.timer);
         startAutoRetryPendingScores.timer = null;
       }
-    }, 15000);
-    setTimeout(() => retryPendingScoresOnce(false), 2500);
+    }, 60000);
+    setTimeout(() => retryPendingScoresOnce(false), 10000);
   }
 
   function daysLeft(ts){
