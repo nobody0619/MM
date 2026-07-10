@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.07.09.1';
+  const APP_VERSION = '2026.07.10.1';
   const SKIP_SERVER_LOGIN = false;
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -2613,12 +2613,58 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function postScoreFallback(payload){
+    const fullPayload = { ...payload, action:'submitToQueue', v:APP_VERSION, _:String(Date.now()) };
+    const body = new URLSearchParams(fullPayload).toString();
+
+    try {
+      if (navigator.sendBeacon) {
+        const blob = new Blob([body], { type:'application/x-www-form-urlencoded;charset=UTF-8' });
+        if (navigator.sendBeacon(SCRIPT_URL, blob)) return true;
+      }
+    } catch(e) {}
+
+    try {
+      fetch(SCRIPT_URL, {
+        method:'POST',
+        mode:'no-cors',
+        cache:'no-store',
+        credentials:'omit',
+        keepalive:true,
+        headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
+        body
+      }).catch(()=>{});
+      return true;
+    } catch(e) {}
+
+    if (postByHiddenFormGeneric(fullPayload)) return true;
+
+    try {
+      const q = new URLSearchParams(fullPayload);
+      const url = SCRIPT_URL + '?' + q.toString();
+      if (url.length < 1800) {
+        const img = new Image();
+        img.referrerPolicy = 'no-referrer';
+        img.src = url;
+        window.__scoreBeacons = window.__scoreBeacons || [];
+        window.__scoreBeacons.push(img);
+        setTimeout(() => {
+          try { window.__scoreBeacons = (window.__scoreBeacons || []).slice(-30); } catch(e) {}
+        }, 5000);
+        return true;
+      }
+    } catch(e) {}
+
+    return false;
+  }
+
   async function submitPayloadHybrid(payload){
     try {
-      const r = await jsonpApi({ ...payload, action:'submitToQueue' }, 45000);
+      const r = await jsonpApi({ ...payload, action:'submitToQueue' }, 20000);
       if (r && r.ok) return r;
       throw new Error((r && r.error) || 'submit failed');
     } catch(e) {
+      postScoreFallback(payload);
       throw e;
     }
   }
@@ -2649,6 +2695,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('submit-status').textContent = '正在送出成绩...';
     setLoading(true, '正在送出成绩...');
 
+    savePendingScore(payload, false);
+
     try {
       const result = await submitPayloadHybrid(payload);
       if (!result || !result.ok || !result.queued) throw new Error('成绩未进入 SubmitQueue');
@@ -2656,7 +2704,6 @@ document.addEventListener('DOMContentLoaded', () => {
       removePendingScore(payload.submitId);
     } catch(e) {
       console.error(e);
-      savePendingScore(payload);
       document.getElementById('submit-status').innerHTML =
         '⚠️ 网络暂时不稳定，成绩已保存在本机，系统会自动补交。';
       startAutoRetryPendingScores();
@@ -2665,7 +2712,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function savePendingScore(payload){
+  function savePendingScore(payload, shouldStartRetry=true){
     try {
       const key = 'kee_pending_scores_v1';
       const arr = JSON.parse(localStorage.getItem(key) || '[]');
@@ -2673,7 +2720,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const kept = arr.filter(x => String(x.submitId || '') !== id);
       kept.push(payload);
       localStorage.setItem(key, JSON.stringify(kept.slice(-20)));
-      startAutoRetryPendingScores();
+      if (shouldStartRetry) startAutoRetryPendingScores();
     } catch(e) {}
   }
 
@@ -2701,6 +2748,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (result && result.ok && result.queued) sent++;
         else remain.push(item);
       } catch(e) {
+        postScoreFallback(item);
         remain.push({ ...item, lastRetryAt:Date.now() });
       }
     }
@@ -2730,9 +2778,16 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(startAutoRetryPendingScores.timer);
         startAutoRetryPendingScores.timer = null;
       }
-    }, 60000);
-    setTimeout(() => retryPendingScoresOnce(false), 10000);
+    }, 20000);
+    setTimeout(() => retryPendingScoresOnce(false), 5000);
   }
+
+  window.addEventListener('pagehide', () => {
+    try {
+      const arr = JSON.parse(localStorage.getItem('kee_pending_scores_v1') || '[]');
+      arr.slice(-5).forEach(item => postScoreFallback(item));
+    } catch(e) {}
+  });
 
   function daysLeft(ts){
     const diff = Number(ts) - nowMs();
