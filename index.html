@@ -331,7 +331,7 @@
       <p><strong>⭐ EXP 与等级</strong><br>
       完成练习、击败小怪、挑战 Boss 都会拿到 EXP，EXP 满了就会升级。同一份练习每天最多 10 次 EXP；2倍经验卷为时间版，也包括 Boss。</p>
       <p><strong>⏳ 小提醒</strong><br>
-      首次进入或提交成绩时，系统可能会稍慢一点，请稍等几秒。</p>
+      提交成绩时会先保存，再上传到系统；看到完成提示前请停留几秒。</p>
     </div>
     <div style="text-align:right;"><button id="closeRulesBtn" class="btn">关闭</button></div>
   </div>
@@ -393,7 +393,7 @@
 <div id="loadingMask" class="loading-box">
   <div class="loading-inner">
     <div id="loadingText" style="font-weight:700;margin-bottom:8px;">请稍等...</div>
-    <div class="muted">首次加载题库或提交成绩时会稍慢一点，请不要关闭页面。</div>
+    <div class="muted">提交成绩时会先保存在本机，再上传到系统；请等到显示“成绩已提交”。</div>
   </div>
 </div>
 
@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.07.10.1';
+  const APP_VERSION = '2026.07.13.1';
   const SKIP_SERVER_LOGIN = false;
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -2531,7 +2531,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('finish-msg').textContent = `恭喜 ${displayUser || user}，本次完成！`;
     document.getElementById('stats').textContent = `模式：${modeLabel(currentMode)}｜得分: ${score}｜正确率: ${accuracyPct}%｜答对 ${correct} 题｜答错 ${wrong} 题｜用时：${formatDuration(usedSeconds)}｜EXP +${currentExpGain}${reviveUsed ? '｜已使用复活' : ''}`;
     document.getElementById('battle-result').textContent = battleMsg;
-    document.getElementById('submit-status').textContent = '正在送出成绩…';
+    document.getElementById('submit-status').textContent = '正在保存并上传成绩…';
 
     if (currentMode !== 'wrongbook') await submitScore(usedSeconds);
     else document.getElementById('submit-status').textContent = '错题重练完成，不上传成绩。';
@@ -2660,7 +2660,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function submitPayloadHybrid(payload){
     try {
-      const r = await jsonpApi({ ...payload, action:'submitToQueue' }, 20000);
+      const r = await jsonpApi({ ...payload, action:'submitToQueue' }, 12000);
       if (r && r.ok) return r;
       throw new Error((r && r.error) || 'submit failed');
     } catch(e) {
@@ -2692,8 +2692,8 @@ document.addEventListener('DOMContentLoaded', () => {
       coinNote: (lastCoinReward && lastCoinReward.note) || ''
     };
 
-    document.getElementById('submit-status').textContent = '正在送出成绩...';
-    setLoading(true, '正在送出成绩...');
+    document.getElementById('submit-status').textContent = '正在保存并上传成绩...';
+    setLoading(true, '正在保存成绩，请稍等几秒...');
 
     savePendingScore(payload, false);
 
@@ -2705,7 +2705,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) {
       console.error(e);
       document.getElementById('submit-status').innerHTML =
-        '⚠️ 网络暂时不稳定，成绩已保存在本机，系统会自动补交。';
+        '⚠️ 成绩已先保存在本机，系统会自动补交。';
       startAutoRetryPendingScores();
     } finally {
       setLoading(false);
@@ -2738,7 +2738,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { arr = []; }
     if (!arr.length) return { sent:0, remain:0 };
 
-    if (showLoading) setLoading(true, '正在自动补交成绩...');
+    if (showLoading) setLoading(true, '正在补交成绩，请稍等...');
     let sent = 0;
     const remain = [];
 
