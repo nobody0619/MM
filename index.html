@@ -56,6 +56,8 @@
     .answer-result.correct .answer-result-icon{background:#16a34a}
     .answer-result.wrong .answer-result-icon{background:#dc2626}
     .answer-detail{color:var(--text)}
+    .doubt-wrap{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:10px 0 4px}
+    .doubt-status{font-size:13px;color:var(--muted)}
     input[type="radio"],input[type="checkbox"]{transform:scale(1.2);margin:3px 2px 0 0;flex:0 0 auto}.option-text{display:inline-block;min-width:0;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
     img{max-width:100%;margin:10px 0;border:2px solid #ccc;border-radius:10px}
     #submit-status{margin-top:10px;font-size:14px}
@@ -414,9 +416,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.07.15.2';
+  const APP_VERSION = '2026.07.15.3';
   const SKIP_SERVER_LOGIN = false;
-  const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
+  const QUESTION_CACHE_ROOT = 'kee_question_cache_';
+  const QUESTION_CACHE_PREFIX = QUESTION_CACHE_ROOT + 'v2_' + APP_VERSION + '_';
   const QUESTION_CACHE_DAYS = 30;
   let serverBaseMs = 0;
   let perfBaseMs = 0;
@@ -462,8 +465,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let activeBoostTimer = null;
   let reviveUsed = false;
   let preventAutoChapterJump = false;
+  let currentSubmitTrackingId = '';
 
   ensureLatestVersion_();
+  clearOldQuestionCaches_();
 
   const saved = readSavedAuth();
   if (saved && saved.user && saved.password) {
@@ -1051,6 +1056,16 @@ document.addEventListener('DOMContentLoaded', () => {
     return QUESTION_CACHE_PREFIX + Math.abs(h).toString(36);
   }
 
+  function clearOldQuestionCaches_(){
+    try {
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith(QUESTION_CACHE_ROOT) && !k.startsWith(QUESTION_CACHE_PREFIX)) {
+          localStorage.removeItem(k);
+        }
+      });
+    } catch(e) {}
+  }
+
   function readQuestionCache(url){
     try {
       const raw = localStorage.getItem(questionCacheKey(url));
@@ -1079,7 +1094,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 手机 storage 满时，自动清理旧题库缓存一次。
       try {
         Object.keys(localStorage).forEach(k => {
-          if (k.startsWith(QUESTION_CACHE_PREFIX)) localStorage.removeItem(k);
+          if (k.startsWith(QUESTION_CACHE_ROOT)) localStorage.removeItem(k);
         });
       } catch(_) {}
     }
@@ -1959,7 +1974,7 @@ document.addEventListener('DOMContentLoaded', () => {
       clearBattleHp();
       return showChapterList();
     }
-    const count = Math.min(20, Math.max(8, Math.ceil(all.length * 0.25)));
+    const count = Math.max(1, Math.ceil(all.length * 0.5));
     qs = shuffle(all).slice(0, count).map(q => ({...q, attempt:0}));
     baseTotal = qs.length;
     queue = [...qs];
@@ -2205,6 +2220,54 @@ document.addEventListener('DOMContentLoaded', () => {
     updateHeader();
   }
 
+  function malaysiaDateKey_(){
+    try {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone:TZ, year:'numeric', month:'2-digit', day:'2-digit'
+      }).format(new Date());
+    } catch(e) {
+      return new Date().toISOString().slice(0, 10);
+    }
+  }
+
+  async function submitQuestionDoubt(q, userAnswers, isCorrect, button, statusEl){
+    const questionKey = q.wrongId || currentWrongId || buildWrongId(currentRow, q);
+    const selected = q.type === 'text'
+      ? (userAnswers || []).join(', ')
+      : (userAnswers || []).map(letter => `${letter}: ${q[letter] || ''}`).join(' | ');
+    const accepted = getAcceptedAnswerLetters(q);
+    const correctText = accepted.length
+      ? accepted.map(letter => `${letter}: ${q[letter] || ''}`).join(' | ')
+      : String(q.answer || '');
+    const doubtId = ['DOUBT', book, displayUser || user, questionKey, malaysiaDateKey_()].join('|');
+
+    button.disabled = true;
+    statusEl.textContent = '正在记录...';
+    try {
+      const result = await jsonpApi({
+        action:'addStudentQuestion',
+        doubtId,
+        book,
+        name:displayUser || user,
+        quizId:currentMode === 'boss' ? `Bab ${currentBab} Boss` : (currentRow ? currentRow[chapterKey] : ''),
+        chapter:currentRow ? (currentRow[chapterKey] || '') : '',
+        label:currentRow ? (currentRow[labelKey] || '') : '',
+        questionKey,
+        question:q.question || '',
+        studentAnswer:selected,
+        correctAnswer:correctText,
+        result:isCorrect ? 'Correct' : 'Wrong',
+        mode:currentMode
+      }, 12000);
+      if (!result || !result.ok) throw new Error((result && result.error) || '记录失败');
+      button.textContent = '✓ 已记录疑问';
+      statusEl.textContent = result.duplicate ? '今天已记录过这题。' : '老师会在疑问表看到。';
+    } catch(e) {
+      button.disabled = false;
+      statusEl.textContent = '暂时记录失败，请再按一次。';
+    }
+  }
+
   function nextQ(){
     const qa = document.getElementById('question-area');
     qa.innerHTML = ''; updateUI(0);
@@ -2331,8 +2394,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const explainLine = q.explain ? `<br><span style="font-weight:normal">${escapeHtml(String(q.explain))}</span>` : '';
       const resultClass = isC ? 'correct' : 'wrong';
       const resultIcon = isC ? '✓' : '✕';
-      const resultText = isC ? `正确！${delta>0?'+':''}${delta}` : `错误！${delta}`;
+      const resultText = isC ? `正确！${delta>0?'+':''}${delta}分` : `错误！${delta}分`;
       fb.innerHTML = `<div class="answer-result ${resultClass}"><span class="answer-result-icon" aria-hidden="true">${resultIcon}</span><span>${resultText}</span></div><div class="answer-detail">正确答案：<br>${allAnsHtml}${explainLine}</div>`;
+
+      const doubtWrap = document.createElement('div');
+      doubtWrap.className = 'doubt-wrap';
+      const doubtBtn = document.createElement('button');
+      doubtBtn.className = 'btn ghost small';
+      doubtBtn.type = 'button';
+      doubtBtn.textContent = '❓ 我有疑问';
+      const doubtStatus = document.createElement('span');
+      doubtStatus.className = 'doubt-status';
+      doubtBtn.onclick = () => submitQuestionDoubt(q, ua, isC, doubtBtn, doubtStatus);
+      doubtWrap.appendChild(doubtBtn);
+      doubtWrap.appendChild(doubtStatus);
+      div.appendChild(doubtWrap);
 
       updateUI(delta);
       sb.disabled = true;
@@ -2680,10 +2756,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function createSubmissionCode_(){
+    return (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)).toUpperCase();
+  }
+
+  function setSubmissionStatus_(message, payload){
+    const status = document.getElementById('submit-status');
+    if (!status) return;
+    const code = payload && payload.submitCode ? String(payload.submitCode) : '';
+    status.textContent = code ? `${message}｜提交编号：${code}` : message;
+  }
+
+  function scheduleSubmitVerification_(payload){
+    const delays = [20000, 75000];
+    delays.forEach(delay => setTimeout(async () => {
+      if (!payload || currentSubmitTrackingId !== payload.submitId) return;
+      try {
+        const result = await jsonpApi({
+          action:'verifySubmit', book:payload.book, submitId:payload.submitId
+        }, 10000);
+        if (!result || !result.ok) return;
+        if (result.processed) {
+          setSubmissionStatus_('✅ 已写入成绩表', payload);
+          currentSubmitTrackingId = '';
+        } else if (result.queued) {
+          setSubmissionStatus_('⏳ 已进入 SubmitQueue，正在写入成绩表', payload);
+        }
+      } catch(e) {}
+    }, delay));
+  }
+
   async function submitScore(durationSeconds){
+    const submitCode = createSubmissionCode_();
     const payload = {
       action:'submitToQueue',
-      submitId: `${book}|${displayUser || user}|${currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey]}|${Date.now()}`,
+      submitId: `${book}|${displayUser || user}|${currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey]}|${submitCode}`,
+      submitCode,
       book,
       quizId: currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey],
       name: displayUser || user,
@@ -2703,20 +2811,21 @@ document.addEventListener('DOMContentLoaded', () => {
       coinNote: (lastCoinReward && lastCoinReward.note) || ''
     };
 
-    document.getElementById('submit-status').textContent = '正在保存并上传成绩...';
-    setLoading(true, '正在保存成绩，请稍等几秒...', '成绩会先保存在本机，再上传到系统；请等到显示“成绩已提交”。');
+    currentSubmitTrackingId = payload.submitId;
+    setSubmissionStatus_('💾 已保存在本机，正在上传', payload);
+    setLoading(true, '正在保存成绩，请稍等几秒...', '成绩会先保存在本机，再上传到系统；请等到显示“已进入 SubmitQueue”。');
 
     savePendingScore(payload, false);
 
     try {
       const result = await submitPayloadHybrid(payload);
       if (!result || !result.ok || !result.queued) throw new Error('成绩未进入 SubmitQueue');
-      document.getElementById('submit-status').textContent = '✅ 成绩已提交';
+      setSubmissionStatus_('✅ 已进入 SubmitQueue', payload);
       removePendingScore(payload.submitId);
+      scheduleSubmitVerification_(payload);
     } catch(e) {
       console.error(e);
-      document.getElementById('submit-status').innerHTML =
-        '⚠️ 成绩已先保存在本机，系统会自动补交。';
+      setSubmissionStatus_('⚠️ 已保存在本机，等待自动补交', payload);
       startAutoRetryPendingScores();
     } finally {
       setLoading(false);
@@ -2751,12 +2860,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (showLoading) setLoading(true, '正在补交成绩，请稍等...', '系统正在把本机暂存的成绩补交到成绩表。');
     let sent = 0;
+    let sentCurrent = null;
     const remain = [];
 
     for (const item of arr) {
       try {
         const result = await submitPayloadHybrid({ ...item, action:'submitToQueue' });
-        if (result && result.ok && result.queued) sent++;
+        if (result && result.ok && result.queued) {
+          sent++;
+          if (currentSubmitTrackingId === item.submitId) sentCurrent = item;
+        }
         else remain.push(item);
       } catch(e) {
         postScoreFallback(item);
@@ -2769,10 +2882,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (showLoading) setLoading(false);
     const status = document.getElementById('submit-status');
-    if (status && sent) {
+    if (sentCurrent) {
+      setSubmissionStatus_('✅ 已自动补交并进入 SubmitQueue', sentCurrent);
+      scheduleSubmitVerification_(sentCurrent);
+    } else if (status && sent) {
       status.textContent = remain.length
         ? `✅ 已自动补交 ${sent} 份；还有 ${remain.length} 份继续自动补交中。`
-        : `✅ 成绩已自动补交并确认写入。`;
+        : `✅ 暂存成绩已全部进入 SubmitQueue。`;
     } else if (status && remain.length) {
       status.textContent = `⚠️ 成绩仍在自动补交中。`;
     }
