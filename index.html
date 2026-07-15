@@ -49,6 +49,13 @@
     .option-label{display:flex;align-items:flex-start;gap:8px;margin:6px 0;cursor:pointer;padding:8px;border-radius:10px;text-align:left;line-height:1.45;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
     .option-label:hover{background:#f3f4f6}
     .feedback{font-weight:bold;margin:12px 0;line-height:1.6}
+    .answer-result{display:flex;align-items:center;gap:9px;margin-bottom:6px;font-size:20px;font-weight:800}
+    .answer-result.correct{color:#15803d}
+    .answer-result.wrong{color:#dc2626}
+    .answer-result-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;color:#fff;font-size:19px;line-height:1;flex:0 0 28px}
+    .answer-result.correct .answer-result-icon{background:#16a34a}
+    .answer-result.wrong .answer-result-icon{background:#dc2626}
+    .answer-detail{color:var(--text)}
     input[type="radio"],input[type="checkbox"]{transform:scale(1.2);margin:3px 2px 0 0;flex:0 0 auto}.option-text{display:inline-block;min-width:0;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
     img{max-width:100%;margin:10px 0;border:2px solid #ccc;border-radius:10px}
     #submit-status{margin-top:10px;font-size:14px}
@@ -151,6 +158,8 @@
     body.theme-dark .btn.secondary{background:#0f172a!important;color:#f8fafc!important;border-color:#94a3b8!important}
     body.theme-dark .btn.ghost{background:#312e81!important;color:#e0e7ff!important;border-color:#818cf8!important}
     body.theme-dark .option-label:hover{background:#334155!important}
+    body.theme-dark .answer-result.correct{color:#4ade80}
+    body.theme-dark .answer-result.wrong{color:#f87171}
 
 
     .firework-piece{
@@ -405,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.07.15.1';
+  const APP_VERSION = '2026.07.15.2';
   const SKIP_SERVER_LOGIN = false;
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -2320,9 +2329,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const explainLine = q.explain ? `<br><span style="font-weight:normal">${escapeHtml(String(q.explain))}</span>` : '';
-      fb.innerHTML = isC
-        ? `正确! ${delta>0?'+':''}${delta}<br>正确答案：<br>${allAnsHtml}${explainLine}`
-        : `错误! ${delta}<br>正确答案：<br>${allAnsHtml}${explainLine}`;
+      const resultClass = isC ? 'correct' : 'wrong';
+      const resultIcon = isC ? '✓' : '✕';
+      const resultText = isC ? `正确！${delta>0?'+':''}${delta}` : `错误！${delta}`;
+      fb.innerHTML = `<div class="answer-result ${resultClass}"><span class="answer-result-icon" aria-hidden="true">${resultIcon}</span><span>${resultText}</span></div><div class="answer-detail">正确答案：<br>${allAnsHtml}${explainLine}</div>`;
 
       updateUI(delta);
       sb.disabled = true;
