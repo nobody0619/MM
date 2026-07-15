@@ -393,7 +393,7 @@
 <div id="loadingMask" class="loading-box">
   <div class="loading-inner">
     <div id="loadingText" style="font-weight:700;margin-bottom:8px;">请稍等...</div>
-    <div class="muted">提交成绩时会先保存在本机，再上传到系统；请等到显示“成绩已提交”。</div>
+    <div class="muted" id="loadingHint">请稍等，系统正在处理。</div>
   </div>
 </div>
 
@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.07.14.1';
+  const APP_VERSION = '2026.07.15.1';
   const SKIP_SERVER_LOGIN = false;
   const QUESTION_CACHE_PREFIX = 'kee_question_cache_v1_';
   const QUESTION_CACHE_DAYS = 30;
@@ -804,8 +804,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function setLoading(show, text){
+  function setLoading(show, text, hint){
     document.getElementById('loadingText').textContent = text || '请稍等...';
+    document.getElementById('loadingHint').textContent = hint || '请稍等，系统正在处理。';
     document.getElementById('loadingMask').style.display = show ? 'flex' : 'none';
   }
 
@@ -849,7 +850,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!nm || !pwd) return msg.textContent = '请输入姓名和每月密码';
 
     msg.textContent = '正在加载章节...';
-    setLoading(true, '正在加载章节，请稍等...');
+    setLoading(true, '正在进入章节，请稍等...', '题数、金币和怪兽状态会在后台补上。');
 
     try {
       // 紧急稳定模式：不等待 Apps Script 验证，先让学生进入练习。
@@ -2693,7 +2694,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.getElementById('submit-status').textContent = '正在保存并上传成绩...';
-    setLoading(true, '正在保存成绩，请稍等几秒...');
+    setLoading(true, '正在保存成绩，请稍等几秒...', '成绩会先保存在本机，再上传到系统；请等到显示“成绩已提交”。');
 
     savePendingScore(payload, false);
 
@@ -2738,7 +2739,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { arr = []; }
     if (!arr.length) return { sent:0, remain:0 };
 
-    if (showLoading) setLoading(true, '正在补交成绩，请稍等...');
+    if (showLoading) setLoading(true, '正在补交成绩，请稍等...', '系统正在把本机暂存的成绩补交到成绩表。');
     let sent = 0;
     const remain = [];
 
