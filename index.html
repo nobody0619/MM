@@ -107,7 +107,6 @@
     .hp-fill.player{background:linear-gradient(90deg,#22c55e,#10b981)}
     .hp-text{font-size:12px;color:var(--muted);white-space:nowrap;min-width:46px;text-align:right}
     .combat-msg{font-size:13px;color:var(--muted);margin-top:8px;min-height:18px}
-    .hint-note{font-size:12px;color:var(--muted);margin:6px 0 10px;line-height:1.45}
     .hit{animation:hitShake .25s ease}
     .attack{animation:attackMove .25s ease}
     .heal{animation:healPulse .35s ease}
@@ -379,7 +378,6 @@
     <div style="line-height:1.8;">
       <p><strong>🪙 金币来源</strong><br>第一次答对 +1 金币，第一次答错 -0.5 金币；击杀小怪、Boss 会有额外金币。</p>
       <p><strong>💖 复活</strong><br>小怪复活 30 金币；Boss 复活 50 金币；每次挑战最多复活 1 次。用了复活后不能 Perfect Kill / Perfect Boss。</p>
-      <p><strong>💡 提示</strong><br>普通练习 10 金币；小怪 15 金币；Boss 25 金币。每题最多用 1 次。用了提示后不能 Perfect Kill / Perfect Boss。</p>
       <p><strong>⚡ 时间版 2倍经验</strong><br>30分钟 150 金币，1小时 250 金币，2小时 400 金币。有效时间内普通练习、小怪、Boss 的 EXP x2；错题本不适用。</p>
       <p><strong>😈 嘲讽小怪</strong><br>已死亡的小怪可花 80 金币马上复活再打。同一只小怪每天最多嘲讽 1 次。</p>
       <p><strong>⏳ EXP 限制</strong><br>同一学生、同一科目、同一份练习，同一天最多只有 10 次可以得到 EXP；第 11 次开始成绩和金币照常记录，但 EXP 为 0。</p>
@@ -416,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.07.15.3';
+  const APP_VERSION = '2026.07.20.1';
   const SKIP_SERVER_LOGIN = false;
   const QUESTION_CACHE_ROOT = 'kee_question_cache_';
   const QUESTION_CACHE_PREFIX = QUESTION_CACHE_ROOT + 'v2_' + APP_VERSION + '_';
@@ -461,11 +459,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastAccuracyPct = 0;
   let lastCoinReward = { baseCoins:0, penaltyCoins:0, bonusCoins:0, finalCoins:0, note:'' };
   let shopProfile = { inventory:[], equipped:{}, activeBoost:null };
-  let hintUsedThisQuiz = false;
   let activeBoostTimer = null;
   let reviveUsed = false;
   let preventAutoChapterJump = false;
-  let currentSubmitTrackingId = '';
 
   ensureLatestVersion_();
   clearOldQuestionCaches_();
@@ -1669,7 +1665,7 @@ document.addEventListener('DOMContentLoaded', () => {
     qs = [wrongBookQuestionFromRecord(w)];
     baseTotal = 1;
     queue = [...qs];
-    score = correct = wrong = firstTryCorrect = firstTryWrong = 0; hintUsedThisQuiz = false;
+    score = correct = wrong = firstTryCorrect = firstTryWrong = 0;
     currentExpGain = 0;
     chapterStart = 0;
     clearBattleHp();
@@ -1694,7 +1690,7 @@ document.addEventListener('DOMContentLoaded', () => {
     qs = (list || []).map(wrongBookQuestionFromRecord);
     baseTotal = qs.length;
     queue = shuffle([...qs]);
-    score = correct = wrong = firstTryCorrect = firstTryWrong = 0; hintUsedThisQuiz = false;
+    score = correct = wrong = firstTryCorrect = firstTryWrong = 0;
     currentExpGain = 0;
     chapterStart = 0;
     clearBattleHp();
@@ -1906,7 +1902,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('backToListTop').textContent = '🏠 回到章节选择';
     document.getElementById('quiz-title').textContent = `${row[chapterKey]}${row[labelKey] ? ' — ' + row[labelKey] : ''}`;
     document.getElementById('mode-badge').textContent = mode === 'practice' ? '模式：普通练习' : '模式：小怪挑战';
-    score = correct = wrong = firstTryCorrect = firstTryWrong = 0; hintUsedThisQuiz = false;
+    score = correct = wrong = firstTryCorrect = firstTryWrong = 0;
     currentExpGain = 0;
     chapterStart = 0;
     setLoading(true, '正在加载题目，请稍等...');
@@ -2188,38 +2184,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  async function useHintForQuestion(q, div, fb){
-    if (q.hintUsed) return alert('这题已经用过提示。');
-    const price = currentMode === 'boss' ? 25 : (currentMode === 'monster' ? 15 : 10);
-    if (Number(coinState.coins || 0) < price) return alert(`金币不足，需要 ${price} 金币。`);
-    if (!(await appConfirm(`使用提示会扣 ${price} 金币，并显示一个提示。\n\n选择题：隐藏一个错误选项。\n多选题：显示其中一个正确答案。\n填充题：显示答案开头。\n\n每题最多使用 1 次；用了提示后不能 Perfect Kill / Perfect Boss。\n\n确定使用？`, { okText:'使用提示' }))) return;
-
-    const r = await spendCoins(price, `使用提示 -${price}`, currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey]);
-    if (!r || !r.ok) return alert((r && r.error) || '扣金币失败');
-
-    q.hintUsed = true;
-    hintUsedThisQuiz = true;
-
-    if (q.type === 'radio') {
-      const ans = getAcceptedAnswerLetters(q);
-      const labels = Array.from(div.querySelectorAll('.option-label'));
-      const wrongLabels = labels.filter(lbl => {
-        const inp = lbl.querySelector('input');
-        return inp && !ans.includes(String(inp.value || '').toUpperCase());
-      });
-      if (wrongLabels.length) wrongLabels[Math.floor(Math.random()*wrongLabels.length)].style.display='none';
-      fb.innerHTML += `<br><span style="color:#7c3aed">💡 已隐藏 1 个错误选项。</span>`;
-    } else if (q.type === 'checkbox') {
-      const ans = getAcceptedAnswerLetters(q);
-      const one = ans.find(a => q[a]) || ans[0] || '';
-      fb.innerHTML += `<br><span style="color:#7c3aed">💡 提示：其中一个正确答案是 ${escapeHtml(q[one] || one)}</span>`;
-    } else {
-      const a = String(q.answer || '').split(',')[0] || '';
-      fb.innerHTML += `<br><span style="color:#7c3aed">💡 提示：答案开头是「${escapeHtml(a.slice(0, Math.min(3, a.length)))}...」</span>`;
-    }
-    updateHeader();
-  }
-
   function malaysiaDateKey_(){
     try {
       return new Intl.DateTimeFormat('en-CA', {
@@ -2307,27 +2271,26 @@ document.addEventListener('DOMContentLoaded', () => {
     div.appendChild(opts);
 
     const fb = document.createElement('div'); fb.className='feedback'; div.appendChild(fb);
-    const hintBtn = document.createElement('button');
-    hintBtn.className = 'btn ghost small';
-    const hintPrice = currentMode === 'boss' ? 25 : (currentMode === 'monster' ? 15 : 10);
-    hintBtn.textContent = `💡 看提示 -${hintPrice}金币`;
-    hintBtn.title = `扣 ${hintPrice} 金币显示提示；每题只能使用 1 次。`;
-    hintBtn.setAttribute('aria-label', `看提示，扣 ${hintPrice} 金币`);
-    hintBtn.onclick = () => useHintForQuestion(q, div, fb);
-    div.appendChild(hintBtn);
-    const hintNote = document.createElement('div');
-    hintNote.className = 'hint-note';
-    hintNote.textContent = `扣 ${hintPrice} 金币显示提示，每题只能用 1 次；点击后会先确认。`;
-    div.appendChild(hintNote);
-    const sb = document.createElement('button'); sb.className='btn'; sb.textContent='提交';
+    let answered = false;
+    const sb = document.createElement('button'); sb.className='btn'; sb.textContent='提交答案';
     sb.onclick = async () => {
+      if (answered) {
+        sb.disabled = true;
+        return nextQ();
+      }
+      sb.disabled = true;
       let ua=[];
       if (q.type==='text'){
         ua = document.getElementById('txtAns').value.split(',').map(s=>s.trim()).filter(Boolean);
       } else {
         ua = Array.from(div.querySelectorAll('input[name="opt"]:checked')).map(i=>i.value);
       }
-      if (!ua.length) return alert('请选择或输入答案');
+      if (!ua.length) {
+        sb.disabled = false;
+        return alert('请选择或输入答案');
+      }
+      answered = true;
+      div.querySelectorAll('input').forEach(input => { input.disabled = true; });
 
       let isC=false;
       if (q.type==='text'){
@@ -2411,16 +2374,12 @@ document.addEventListener('DOMContentLoaded', () => {
       div.appendChild(doubtWrap);
 
       updateUI(delta);
-      sb.disabled = true;
-      const nb = document.createElement('button'); nb.className='btn secondary'; nb.textContent = '下一题'; nb.onclick = nextQ;
-      div.appendChild(nb);
 
       if (currentMode !== 'practice' && playerHp <= 0) {
-        const revived = await tryReviveAfterDeath(fb, nb);
+        const revived = await tryReviveAfterDeath(fb, sb);
         if (!revived) {
           battleEndedByDeath = true;
           fb.innerHTML += '<br><span style="color:#b91c1c">💀 你被怪兽击败了，本次挑战失败，没有EXP。</span>';
-          nb.textContent = '查看结果';
           queue = [];
         }
       }
@@ -2431,6 +2390,11 @@ document.addEventListener('DOMContentLoaded', () => {
           queue.splice(Math.floor(Math.random()*(queue.length+1)),0,{...q});
         }
       }
+      sb.className = 'btn secondary';
+      sb.textContent = queue.length
+        ? '下一题'
+        : (currentMode === 'wrongbook' || battleEndedByDeath ? '查看结果' : '提交成绩');
+      sb.disabled = false;
     };
     div.appendChild(sb);
 
@@ -2482,22 +2446,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function refreshLatestProgressSoon(){
-    const status = document.getElementById('submit-status');
     const attempts = [1200, 3500, 7000];
-    attempts.forEach((delay, idx) => {
+    attempts.forEach(delay => {
       setTimeout(async () => {
         try {
           await loadProgress();
           updateHeader();
-          if (isQuizActive) return;
-          if (idx === attempts.length - 1 && status) {
-            status.textContent = (status.textContent || '').replace('（后台处理中）','') + '｜怪兽状态已更新';
-          }
-        } catch(e) {
-          if (idx === attempts.length - 1 && status) {
-            status.textContent = (status.textContent || '') + '｜怪兽状态稍后刷新';
-          }
-        }
+        } catch(e) {}
       }, delay);
     });
   }
@@ -2547,7 +2502,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const accuracy = firstTryTotal ? Math.max(0, Math.min(1, firstTryCorrect / firstTryTotal)) : 0;
     const accuracyPct = Math.round(accuracy * 100);
     let battleMsg = '';
-    let exp = calcQuestionScaledExp(currentMode, qs.length, accuracy, battleEndedByDeath, reviveUsed, hintUsedThisQuiz);
+    let exp = calcQuestionScaledExp(currentMode, qs.length, accuracy, battleEndedByDeath, reviveUsed);
     let coinReward = { baseCoins:0, penaltyCoins:0, bonusCoins:0, finalCoins:0, note:'' };
     if (battleEndedByDeath && currentMode !== 'practice') exp = 0;
 
@@ -2558,7 +2513,7 @@ document.addEventListener('DOMContentLoaded', () => {
       battleMsg = correct > 0 ? `✅ 已答对 ${correct} 题，会标记为已掌握；系统每星期自动从错题本删除。答错的会继续保留。` : '❌ 仍需再练，错题会继续保留在错题本。';
     } else if (currentMode === 'monster') {
       const kill = !battleEndedByDeath && accuracy >= 0.70;
-      const perfect = !battleEndedByDeath && !reviveUsed && !hintUsedThisQuiz && accuracy >= 0.90;
+      const perfect = !battleEndedByDeath && !reviveUsed && accuracy >= 0.90;
       coinReward = calculateCoinReward(currentMode, accuracyPct, kill, perfect, false);
 
       if (!battleEndedByDeath) {
@@ -2572,7 +2527,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ? (perfect ? `💀 Perfect Kill！小怪已死亡，6天后复活。` : `💀 小怪已击败，6天后复活倒数。`)
           : `⚠️ 挑战失败！未达到击杀门槛（需要 ≥70%），小怪仍存活。`);
     } else if (currentMode === 'boss') {
-      coinReward = calculateCoinReward(currentMode, accuracyPct, false, false, !battleEndedByDeath && !reviveUsed && !hintUsedThisQuiz && accuracy >= 0.90);
+      coinReward = calculateCoinReward(currentMode, accuracyPct, false, false, !battleEndedByDeath && !reviveUsed && accuracy >= 0.90);
 
       if (!battleEndedByDeath) {
         fireGameAction({
@@ -2646,11 +2601,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.max(1, Math.floor(Number(exp || 0) / 100) + 1);
   }
 
-  function calcQuestionScaledExp(mode, questionCount, accuracy, battleEnded, reviveUsedFlag, hintUsedFlag){
+  function calcQuestionScaledExp(mode, questionCount, accuracy, battleEnded, reviveUsedFlag){
     if (mode === 'wrongbook' || battleEnded) return 0;
     const n = Math.max(1, Number(questionCount || 0));
     const acc = Math.max(0, Math.min(1, Number(accuracy || 0)));
-    const noHelp = !reviveUsedFlag && !hintUsedFlag;
+    const noHelp = !reviveUsedFlag;
     if (mode === 'practice') {
       return Math.max(5, Math.round(n * 1.2));
     }
@@ -2747,7 +2702,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function submitPayloadHybrid(payload){
     try {
-      const r = await jsonpApi({ ...payload, action:'submitToQueue' }, 12000);
+      const r = await jsonpApi({ ...payload, action:'submitToQueue' }, 5000);
       if (r && r.ok) return r;
       throw new Error((r && r.error) || 'submit failed');
     } catch(e) {
@@ -2760,30 +2715,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return (Date.now().toString(36) + Math.random().toString(36).slice(2, 6)).toUpperCase();
   }
 
-  function setSubmissionStatus_(message, payload){
+  function setSubmissionStatus_(message){
     const status = document.getElementById('submit-status');
     if (!status) return;
-    const code = payload && payload.submitCode ? String(payload.submitCode) : '';
-    status.textContent = code ? `${message}｜提交编号：${code}` : message;
-  }
-
-  function scheduleSubmitVerification_(payload){
-    const delays = [20000, 75000];
-    delays.forEach(delay => setTimeout(async () => {
-      if (!payload || currentSubmitTrackingId !== payload.submitId) return;
-      try {
-        const result = await jsonpApi({
-          action:'verifySubmit', book:payload.book, submitId:payload.submitId
-        }, 10000);
-        if (!result || !result.ok) return;
-        if (result.processed) {
-          setSubmissionStatus_('✅ 已写入成绩表', payload);
-          currentSubmitTrackingId = '';
-        } else if (result.queued) {
-          setSubmissionStatus_('⏳ 已进入 SubmitQueue，正在写入成绩表', payload);
-        }
-      } catch(e) {}
-    }, delay));
+    status.textContent = message;
   }
 
   async function submitScore(durationSeconds){
@@ -2791,7 +2726,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const payload = {
       action:'submitToQueue',
       submitId: `${book}|${displayUser || user}|${currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey]}|${submitCode}`,
-      submitCode,
       book,
       quizId: currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey],
       name: displayUser || user,
@@ -2811,21 +2745,19 @@ document.addEventListener('DOMContentLoaded', () => {
       coinNote: (lastCoinReward && lastCoinReward.note) || ''
     };
 
-    currentSubmitTrackingId = payload.submitId;
-    setSubmissionStatus_('💾 已保存在本机，正在上传', payload);
-    setLoading(true, '正在保存成绩，请稍等几秒...', '成绩会先保存在本机，再上传到系统；请等到显示“已进入 SubmitQueue”。');
+    setSubmissionStatus_('正在提交成绩…');
+    setLoading(true, '正在提交成绩，请稍等...', '成绩会先安全保存在本机，网络较慢时系统会自动上传。');
 
     savePendingScore(payload, false);
 
     try {
       const result = await submitPayloadHybrid(payload);
       if (!result || !result.ok || !result.queued) throw new Error('成绩未进入 SubmitQueue');
-      setSubmissionStatus_('✅ 已进入 SubmitQueue', payload);
+      setSubmissionStatus_('✅ 成绩提交成功');
       removePendingScore(payload.submitId);
-      scheduleSubmitVerification_(payload);
     } catch(e) {
       console.error(e);
-      setSubmissionStatus_('⚠️ 已保存在本机，等待自动补交', payload);
+      setSubmissionStatus_('成绩已安全保存，系统正在自动上传');
       startAutoRetryPendingScores();
     } finally {
       setLoading(false);
@@ -2858,9 +2790,8 @@ document.addEventListener('DOMContentLoaded', () => {
     try { arr = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { arr = []; }
     if (!arr.length) return { sent:0, remain:0 };
 
-    if (showLoading) setLoading(true, '正在补交成绩，请稍等...', '系统正在把本机暂存的成绩补交到成绩表。');
+    if (showLoading) setLoading(true, '正在上传成绩，请稍等...', '成绩已安全保存，系统正在自动上传。');
     let sent = 0;
-    let sentCurrent = null;
     const remain = [];
 
     for (const item of arr) {
@@ -2868,7 +2799,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await submitPayloadHybrid({ ...item, action:'submitToQueue' });
         if (result && result.ok && result.queued) {
           sent++;
-          if (currentSubmitTrackingId === item.submitId) sentCurrent = item;
         }
         else remain.push(item);
       } catch(e) {
@@ -2882,15 +2812,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (showLoading) setLoading(false);
     const status = document.getElementById('submit-status');
-    if (sentCurrent) {
-      setSubmissionStatus_('✅ 已自动补交并进入 SubmitQueue', sentCurrent);
-      scheduleSubmitVerification_(sentCurrent);
-    } else if (status && sent) {
-      status.textContent = remain.length
-        ? `✅ 已自动补交 ${sent} 份；还有 ${remain.length} 份继续自动补交中。`
-        : `✅ 暂存成绩已全部进入 SubmitQueue。`;
+    if (status && sent && !remain.length) {
+      status.textContent = '✅ 成绩提交成功';
     } else if (status && remain.length) {
-      status.textContent = `⚠️ 成绩仍在自动补交中。`;
+      status.textContent = '成绩已安全保存，系统正在自动上传';
     }
     return { sent, remain:remain.length };
   }
