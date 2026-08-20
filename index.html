@@ -34,8 +34,10 @@
     .levelup{display:inline-block;margin-top:8px;color:#15803d;font-weight:700}
     .group{margin:16px 0;text-align:left}
     .group-title{font-size:20px;font-weight:700;margin:8px 0 10px}
-    .boss-card,.monster-item{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);background:#fff;border-radius:16px;padding:12px 14px;margin:10px 0}
+    .boss-card,.ultimate-card,.monster-item{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);background:#fff;border-radius:16px;padding:12px 14px;margin:10px 0}
     .boss-card{border-color:#ddd6fe;background:#faf5ff}
+    .ultimate-card{border:2px solid #f59e0b;background:#fffbeb;margin:0 0 18px}
+    .ultimate-card .title-main{font-size:20px;color:#92400e}
     .title{text-align:left;min-width:0}
     .title-main{font-weight:700}
     .meta{color:var(--muted);font-size:13px;margin-top:4px;line-height:1.5}
@@ -120,6 +122,7 @@
     body.theme-dark .card,
     body.theme-dark .monster-item,
     body.theme-dark .boss-card,
+    body.theme-dark .ultimate-card,
     body.theme-dark .xp-wrap,
     body.theme-dark .battle-arena,
     body.theme-dark .modal,
@@ -159,6 +162,8 @@
     body.theme-dark .btn.secondary{background:#0f172a!important;color:#f8fafc!important;border-color:#94a3b8!important}
     body.theme-dark .btn.ghost{background:#312e81!important;color:#e0e7ff!important;border-color:#818cf8!important}
     body.theme-dark .option-label:hover{background:#334155!important}
+    body.theme-dark .ultimate-card{background:#292313!important;border-color:#fbbf24!important}
+    body.theme-dark .ultimate-card .title-main{color:#fde68a!important}
     body.theme-dark .answer-result.correct{color:#4ade80}
     body.theme-dark .answer-result.wrong{color:#f87171}
 
@@ -216,7 +221,7 @@
     <div class="footer-help">
       有问题可直接 WhatsApp 老师：<a href="https://wa.me/60167312519" target="_blank" rel="noopener">016-7312519</a>
     </div>
-    <div class="version-tag" id="versionTag">版本：2026.07.02.2</div>
+    <div class="version-tag" id="versionTag">版本：2026.08.20.1</div>
   </div>
 </div>
 
@@ -261,7 +266,7 @@
       <div class="xp-text" id="statExp">⚡0 / 100</div>
     </div>
     <div id="levelUpMsg" class="levelup"></div>
-    <div class="version-tag">版本：2026.07.02.2</div>
+    <div class="version-tag">版本：2026.08.20.1</div>
   </div>
   <div id="chapterWrap"></div>
 </div>
@@ -333,13 +338,15 @@
       <p><strong>🔁 小怪复活</strong><br>
       小怪击败后 6 天复活；也可以花 80 金币嘲讽已死亡小怪，让它马上复活再挑战。</p>
       <p><strong>👹 Boss 挑战</strong><br>
-      一个 Bab 里有 70% 小怪被击败后，才会解锁 Boss。Boss 会从整个 Bab 随机抽约 25% 的题目来考。</p>
+      一个 Bab 里有 70% 小怪被击败后，才会解锁 Boss。Boss 会从整个 Bab 随机抽 50% 的题目来考。</p>
       <p><strong>⚔️ Boss 机制</strong><br>
       90% 以上可直接击败 Boss；若表现不足，Boss 只会扣血，还要继续挑战。</p>
+      <p><strong>🌋 终极大 Boss</strong><br>
+      不需要先打小怪，可直接选择 20 题或 40 题。题目会尽量平均覆盖所有章节；70% 通关，90% 完美通关。</p>
       <p><strong>📘 普通练习</strong><br>
       练习模式照常可做，答错的题目会再出现 2 次，帮助你记熟。</p>
       <p><strong>⭐ EXP 与等级</strong><br>
-      完成练习、击败小怪、挑战 Boss 都会拿到 EXP，EXP 满了就会升级。同一份练习每天最多 10 次 EXP；2倍经验卷为时间版，也包括 Boss。</p>
+      完成练习、小怪、Boss、终极大 Boss 都会拿到 EXP，EXP 满了就会升级。同一份练习每天最多 10 次 EXP；时间版经验卷也适用于终极大 Boss。</p>
       <p><strong>⏳ 小提醒</strong><br>
       提交成绩时会先保存，再上传到系统；看到完成提示前请停留几秒。</p>
     </div>
@@ -378,7 +385,8 @@
     <div style="line-height:1.8;">
       <p><strong>🪙 金币来源</strong><br>第一次答对 +1 金币，第一次答错 -0.5 金币；击杀小怪、Boss 会有额外金币。</p>
       <p><strong>💖 复活</strong><br>小怪复活 30 金币；Boss 复活 50 金币；每次挑战最多复活 1 次。用了复活后不能 Perfect Kill / Perfect Boss。</p>
-      <p><strong>⚡ 时间版 2倍经验</strong><br>30分钟 150 金币，1小时 250 金币，2小时 400 金币。有效时间内普通练习、小怪、Boss 的 EXP x2；错题本不适用。</p>
+      <p><strong>🌋 终极大 Boss</strong><br>20题或40题可直接挑战。正确率达到70%通关、90%完美通关；40题的金币与经验奖励更高。</p>
+      <p><strong>⚡ 时间版经验卷</strong><br>有效时间内普通练习、小怪、Boss、终极大 Boss 都适用；错题本不适用。</p>
       <p><strong>😈 嘲讽小怪</strong><br>已死亡的小怪可花 80 金币马上复活再打。同一只小怪每天最多嘲讽 1 次。</p>
       <p><strong>⏳ EXP 限制</strong><br>同一学生、同一科目、同一份练习，同一天最多只有 10 次可以得到 EXP；第 11 次开始成绩和金币照常记录，但 EXP 为 0。</p>
       <p><strong>🏅 称号 10级</strong><br>🌱300、⚔️800、🔥1500、🧠2500、🛡️4000、👑6000、💎8500、🐉12000、🌟16000、🏆22000 金币。</p>
@@ -414,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const SCRIPT_URL = document.getElementById('postForm').getAttribute('action');
   const STORAGE_KEY = 'kee_quiz_game_auth_v1';
   const TZ = 'Asia/Kuala_Lumpur';
-  const APP_VERSION = '2026.07.20.1';
+  const APP_VERSION = '2026.08.20.1';
   const SKIP_SERVER_LOGIN = false;
   const QUESTION_CACHE_ROOT = 'kee_question_cache_';
   const QUESTION_CACHE_PREFIX = QUESTION_CACHE_ROOT + 'v2_' + APP_VERSION + '_';
@@ -434,6 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let qs = [], queue = [], score = 0, correct = 0, wrong = 0, chapterStart = 0;
   let currentExpGain = 0;
   let currentBossMeta = null;
+  let currentUltimateCount = 0;
   let baseTotal = 0;
   let battleHp = null;
   let battleMaxHp = null;
@@ -584,10 +593,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   const SHOP_ITEMS = [
-    {itemId:'boost_exp2_30', type:'boost', name:'2倍经验卷 30分钟', icon:'⚡', price:150, desc:'30分钟内 EXP x2，普通练习/小怪/Boss 都适用'},
-    {itemId:'boost_exp2_60', type:'boost', name:'2倍经验卷 1小时', icon:'⚡', price:250, desc:'1小时内 EXP x2，普通练习/小怪/Boss 都适用'},
-    {itemId:'boost_exp2_120', type:'boost', name:'2倍经验卷 2小时', icon:'⚡', price:400, desc:'2小时内 EXP x2，普通练习/小怪/Boss 都适用'},
-    {itemId:'boost_exp3_15', type:'boost', name:'3倍经验卷 15分钟', icon:'⚡⚡', price:500, desc:'15分钟内 EXP x3，普通练习/小怪/Boss 都适用'},
+    {itemId:'boost_exp2_30', type:'boost', name:'2倍经验卷 30分钟', icon:'⚡', price:150, desc:'30分钟内 EXP x2，普通练习/小怪/Boss/终极大 Boss 都适用'},
+    {itemId:'boost_exp2_60', type:'boost', name:'2倍经验卷 1小时', icon:'⚡', price:250, desc:'1小时内 EXP x2，普通练习/小怪/Boss/终极大 Boss 都适用'},
+    {itemId:'boost_exp2_120', type:'boost', name:'2倍经验卷 2小时', icon:'⚡', price:400, desc:'2小时内 EXP x2，普通练习/小怪/Boss/终极大 Boss 都适用'},
+    {itemId:'boost_exp3_15', type:'boost', name:'3倍经验卷 15分钟', icon:'⚡⚡', price:500, desc:'15分钟内 EXP x3，普通练习/小怪/Boss/终极大 Boss 都适用'},
     {itemId:'title_01', type:'title', name:'新手勇者', icon:'🌱', price:300},
     {itemId:'title_02', type:'title', name:'小怪猎人', icon:'⚔️', price:800},
     {itemId:'title_03', type:'title', name:'连胜挑战者', icon:'🔥', price:1500},
@@ -1505,6 +1514,15 @@ document.addEventListener('DOMContentLoaded', () => {
     return 'WB_' + hashId(raw);
   }
 
+  function sourceRowForQuestion_(q){
+    if (!q || !q._sourceChapter) return currentRow;
+    return {
+      [chapterKey]:q._sourceChapter || '',
+      [labelKey]:q._sourceLabel || '',
+      [sheetKey]:q._sourceSheet || ''
+    };
+  }
+
   function fireWrongBook(action, wrongId, row, q){
     try {
       const payload = {
@@ -1728,6 +1746,8 @@ document.addEventListener('DOMContentLoaded', () => {
       groups.get(key).push(r);
     }
 
+    wrap.appendChild(buildUltimateBossCard());
+
     for (const key of [...order, ...(groups.has(OTHERS)?[OTHERS]:[])]) {
       const arr = groups.get(key);
       const g = document.createElement('div'); g.className = 'group';
@@ -1868,6 +1888,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function startQuiz(row, mode){
     isQuizActive = true;
+    currentUltimateCount = 0;
     if (mode === 'monster') {
       const monsterId = buildMonsterId(row);
       if (isMonsterLocallyLocked(monsterId)) {
@@ -1929,6 +1950,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function startBossFight(babNo, arr){
     isQuizActive = true;
+    currentUltimateCount = 0;
     setLoading(true, '正在检查 Boss 状态，请稍等...');
     try {
       const guard = await apiFetch({ action:'canStartBattle', book, name:user, type:'boss', bab:String(babNo) }, 0);
@@ -1984,6 +2006,90 @@ document.addEventListener('DOMContentLoaded', () => {
     nextQ();
   }
 
+  async function loadQuestionBanksLimited_(sourceRows, concurrency=6){
+    const banks = new Array(sourceRows.length);
+    let cursor = 0;
+    const workers = Array.from({ length:Math.min(concurrency, sourceRows.length) }, async () => {
+      while (cursor < sourceRows.length) {
+        const index = cursor++;
+        const row = sourceRows[index];
+        const list = await loadQuestions(row[sheetKey]);
+        banks[index] = (list || []).map(q => ({
+          ...q,
+          _sourceChapter:row[chapterKey] || '',
+          _sourceLabel:row[labelKey] || '',
+          _sourceSheet:row[sheetKey] || ''
+        }));
+      }
+    });
+    await Promise.all(workers);
+    return banks.filter(bank => bank && bank.length);
+  }
+
+  function pickBalancedQuestions_(banks, wanted){
+    const active = shuffle(banks.map(bank => shuffle([...bank])));
+    const selected = [];
+    const seen = new Set();
+    while (active.length && selected.length < wanted) {
+      for (let i=active.length-1; i>=0 && selected.length<wanted; i--) {
+        const bank = active[i];
+        let picked = null;
+        while (bank.length && !picked) {
+          const q = bank.pop();
+          const key = [q.question || '', q.answer || '', q.image || ''].join('|').trim().toLowerCase();
+          if (key && !seen.has(key)) { seen.add(key); picked = q; }
+        }
+        if (picked) selected.push({ ...picked, attempt:0 });
+        if (!bank.length) active.splice(i, 1);
+      }
+      shuffle(active);
+    }
+    return shuffle(selected);
+  }
+
+  async function startUltimateBoss(questionCount){
+    const wanted = questionCount === 40 ? 40 : 20;
+    isQuizActive = true;
+    currentMode = 'ultimate';
+    currentUltimateCount = wanted;
+    currentMonsterRowsForBoss = [];
+    currentBossMeta = null;
+    currentBab = null;
+    currentRow = { [chapterKey]:`终极大 Boss ${wanted}题`, [labelKey]:'全课程总复习', [sheetKey]:'' };
+    lastFocusId = 'ultimate_boss';
+    currentExpGain = 0;
+    chapterStart = 0;
+    score = correct = wrong = firstTryCorrect = firstTryWrong = 0;
+    document.getElementById('chapters').style.display = 'none';
+    document.getElementById('backToListTop').textContent = '🏠 回到章节选择';
+    document.getElementById('quiz-title').textContent = `终极大 Boss：全课程 ${wanted} 题`;
+    document.getElementById('mode-badge').textContent = '模式：终极大 Boss｜70% 通关｜90% 完美通关';
+
+    setLoading(true, '正在集合全课程题库...', `将从不同章节尽量平均抽出 ${wanted} 题。`);
+    try {
+      const banks = await loadQuestionBanksLimited_(rows, 6);
+      qs = pickBalancedQuestions_(banks, wanted);
+      if (!qs.length) throw new Error('题库暂时没有成功加载');
+      if (qs.length < wanted) alert(`目前全课程只有 ${qs.length} 道可用且不重复的题目，将以 ${qs.length} 题进行挑战。`);
+      baseTotal = qs.length;
+      queue = [...qs];
+      setupBattleHp('🌋 终极大 Boss HP', qs.length, qs.length);
+      playerMaxHp = qs.length;
+      playerHp = qs.length;
+      renderBattleHp();
+      document.getElementById('quiz').style.display = 'block';
+      updateUI(0);
+      setLoading(false);
+      nextQ();
+    } catch(e) {
+      setLoading(false);
+      clearBattleHp();
+      isQuizActive = false;
+      alert((e && e.message) || '终极大 Boss 题库加载失败，请稍后再试。');
+      showChapterList();
+    }
+  }
+
   async function loadQuestions(url){
     if (monsterQuestionCache.has(url)) return monsterQuestionCache.get(url);
     const list = await loadQuestionsReliable(url, 4);
@@ -2000,10 +2106,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('battleArena').style.display = (currentMode === 'practice') ? 'none' : 'block';
     document.getElementById('playerName').textContent = decorateName(displayUser || user || '学生');
     const eqAv = equippedItem('avatar'); if (eqAv) document.getElementById('playerIcon').textContent = eqAv.icon;
-    document.getElementById('enemyName').textContent = currentMode === 'boss' ? 'Boss' : '小怪';
-    document.getElementById('monsterIcon').textContent = currentMode === 'boss' ? '👹' : '🧟';
-    document.getElementById('enemyHpLabel').textContent = currentMode === 'boss' ? 'Boss HP' : '小怪HP';
-    setCombatMsg('⚠️ 连错3题会额外扣1HP；连对3题会回复1HP。');
+    document.getElementById('enemyName').textContent = currentMode === 'ultimate' ? '终极大 Boss' : (currentMode === 'boss' ? 'Boss' : '小怪');
+    document.getElementById('monsterIcon').textContent = currentMode === 'ultimate' ? '🌋' : (currentMode === 'boss' ? '👹' : '🧟');
+    document.getElementById('enemyHpLabel').textContent = currentMode === 'ultimate' ? '终极 Boss HP' : (currentMode === 'boss' ? 'Boss HP' : '小怪HP');
+    setCombatMsg(currentMode === 'ultimate' ? '每答对 1 题，就削减终极大 Boss 1 HP。' : '⚠️ 连错3题会额外扣1HP；连对3题会回复1HP。');
     renderBattleHp();
   }
 
@@ -2129,7 +2235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         name:user,
         amount:String(amt),
         reason:reason || '使用金币',
-        quizId:quizId || (currentMode === 'boss' ? `Bab ${currentBab} Boss` : (currentRow ? currentRow[chapterKey] : '')),
+        quizId:quizId || currentQuizId_(),
         mode:currentMode,
         submitId:'SPEND|' + book + '|' + (displayUser || user) + '|' + Date.now()
       }, 2);
@@ -2194,8 +2300,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function buildUltimateBossCard(){
+    const card = document.createElement('div');
+    card.className = 'ultimate-card';
+    card.id = 'ultimate_boss';
+    const left = document.createElement('div');
+    left.className = 'title';
+    left.innerHTML = `
+      <div class="title-main">🌋 终极大 Boss：全课程总复习</div>
+      <div class="meta">无需解锁，直接挑战。题目尽量平均覆盖所有章节。<br>70% 通关｜90% 完美通关｜可重复挑战</div>
+    `;
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    const btn20 = document.createElement('button');
+    btn20.className = 'btn boss small';
+    btn20.textContent = '⚔️ 20题';
+    btn20.onclick = () => startUltimateBoss(20);
+    const btn40 = document.createElement('button');
+    btn40.className = 'btn small';
+    btn40.textContent = '🔥 40题';
+    btn40.onclick = () => startUltimateBoss(40);
+    actions.append(btn20, btn40);
+    card.append(left, actions);
+    return card;
+  }
+
   async function submitQuestionDoubt(q, userAnswers, isCorrect, button, statusEl){
-    const questionKey = q.wrongId || currentWrongId || buildWrongId(currentRow, q);
+    const sourceRow = sourceRowForQuestion_(q);
+    const questionKey = q.wrongId || currentWrongId || buildWrongId(sourceRow, q);
     const selected = q.type === 'text'
       ? (userAnswers || []).join(', ')
       : (userAnswers || []).map(letter => `${letter}: ${q[letter] || ''}`).join(' | ');
@@ -2213,9 +2345,9 @@ document.addEventListener('DOMContentLoaded', () => {
         doubtId,
         book,
         name:displayUser || user,
-        quizId:currentMode === 'boss' ? `Bab ${currentBab} Boss` : (currentRow ? currentRow[chapterKey] : ''),
-        chapter:currentRow ? (currentRow[chapterKey] || '') : '',
-        label:currentRow ? (currentRow[labelKey] || '') : '',
+        quizId:currentQuizId_(),
+        chapter:sourceRow ? (sourceRow[chapterKey] || '') : '',
+        label:sourceRow ? (sourceRow[labelKey] || '') : '',
         questionKey,
         question:q.question || '',
         studentAnswer:selected,
@@ -2244,6 +2376,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const q = queue.shift();
+    const sourceRow = sourceRowForQuestion_(q);
     if (!chapterStart) chapterStart = Date.now();
     const div = document.createElement('div'); div.className = 'question';
     div.innerHTML = `<p><strong>${(q.question||'').replace(/\r?\n/g,'<br/>')}</strong></p>`;
@@ -2315,7 +2448,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })();
 
       let delta;
-      if (currentMode === 'boss') {
+      if (currentMode === 'boss' || currentMode === 'ultimate') {
         delta = isC ? 2 : -1;
       } else {
         delta = isC ? (q.attempt?1:2) : (q.attempt?-2:-1);
@@ -2327,30 +2460,35 @@ document.addEventListener('DOMContentLoaded', () => {
         else firstTryWrong++;
       }
       if (currentMode === 'wrongbook') {
-        const wid = q.wrongId || currentWrongId || buildWrongId(currentRow, q);
+        const wid = q.wrongId || currentWrongId || buildWrongId(sourceRow, q);
         if (isC) {
           wrongBookMasteredLocal.add(String(wid || ''));
           if (wrongBookMap && wrongBookMap[wid]) delete wrongBookMap[wid];
-          fireWrongBook('markWrongMastered', wid, currentRow, q);
+          fireWrongBook('markWrongMastered', wid, sourceRow, q);
         } else {
-          fireWrongBook('addWrong', wid, currentRow, q);
+          fireWrongBook('addWrong', wid, sourceRow, q);
         }
       } else {
-        if (!isC) fireWrongBook('addWrong', buildWrongId(currentRow, q), currentRow, q);
+        if (!isC) fireWrongBook('addWrong', buildWrongId(sourceRow, q), sourceRow, q);
       }
       if (currentMode !== 'practice') {
         if (isC) {
           animatePlayerAttack(); wrongStreak = 0; correctStreak++;
           if (currentMode === 'monster') damageBattleHp(1);
           if (currentMode === 'boss') damageBattleHp(Math.ceil(100 / Math.max(1, qs.length)));
+          if (currentMode === 'ultimate') damageBattleHp(1);
           if (correctStreak >= 3) { correctStreak = 0; healPlayerHp(1); setCombatMsg('🔥 连对3题，回复 1 HP！'); }
           else setCombatMsg('⚔️ 攻击成功！');
         } else {
           correctStreak = 0; wrongStreak++;
-          let hurt = 1;
-          if (wrongStreak >= 3) { hurt += 1; wrongStreak = 0; setCombatMsg('💥 连错3题，额外扣 1 HP！'); }
-          else setCombatMsg('💥 被怪兽攻击，扣 1 HP！');
-          damagePlayerHp(hurt);
+          if (currentMode === 'ultimate') {
+            setCombatMsg('终极大 Boss 挡下了这次攻击，继续完成总复习！');
+          } else {
+            let hurt = 1;
+            if (wrongStreak >= 3) { hurt += 1; wrongStreak = 0; setCombatMsg('💥 连错3题，额外扣 1 HP！'); }
+            else setCombatMsg('💥 被怪兽攻击，扣 1 HP！');
+            damagePlayerHp(hurt);
+          }
         }
       }
 
@@ -2375,7 +2513,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       updateUI(delta);
 
-      if (currentMode !== 'practice' && playerHp <= 0) {
+      if (currentMode !== 'practice' && currentMode !== 'ultimate' && playerHp <= 0) {
         const revived = await tryReviveAfterDeath(fb, sb);
         if (!revived) {
           battleEndedByDeath = true;
@@ -2384,7 +2522,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      if (!isC && currentMode !== 'boss' && !battleEndedByDeath){
+      if (!isC && currentMode !== 'boss' && currentMode !== 'ultimate' && !battleEndedByDeath){
         q.attempt++;
         for (let i=0;i<2;i++) {
           queue.splice(Math.floor(Math.random()*(queue.length+1)),0,{...q});
@@ -2471,6 +2609,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (accuracyPct >= 50) { bonusCoins += 20; notes.push('Boss 扣血 +20'); }
       if (bossKilled) { bonusCoins += 50; notes.push('Boss 击杀 +50'); }
       if (accuracyPct >= 90) { bonusCoins += 100; notes.push('Perfect Boss +100'); }
+    } else if (mode === 'ultimate') {
+      const longRun = currentUltimateCount >= 40;
+      if (accuracyPct >= 70) {
+        const passBonus = longRun ? 100 : 50;
+        bonusCoins += passBonus;
+        notes.push(`终极大 Boss 通关 +${passBonus}`);
+      }
+      if (accuracyPct >= 90) {
+        const perfectBonus = longRun ? 200 : 100;
+        bonusCoins += perfectBonus;
+        notes.push(`终极完美通关 +${perfectBonus}`);
+      }
     }
 
     const finalCoins = Math.max(0, Math.round((baseCoins - penaltyCoins + bonusCoins) * 10) / 10);
@@ -2543,6 +2693,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (battleEndedByDeath) battleMsg = '💀 Boss战失败！你被Boss击败了，本次没有EXP。';
       else if (accuracy >= 0.90) battleMsg = '👹 Boss 战结果已送出！若成功击杀，本 Bab 小怪也会同步死亡。';
       else battleMsg = `⚔️ Boss 战结果已送出，稍后会更新 Boss HP。`;
+    } else if (currentMode === 'ultimate') {
+      const passed = accuracy >= 0.70;
+      const perfect = accuracy >= 0.90;
+      coinReward = calculateCoinReward(currentMode, accuracyPct, false, perfect, perfect);
+      battleMsg = perfect
+        ? `🌟 终极完美通关！全课程正确率达到 90%。`
+        : (passed
+          ? `🏆 终极大 Boss 通关！全课程正确率达到 70%。`
+          : `📚 总复习完成！距离通关还差 ${Math.max(0, 70 - accuracyPct)}%。`);
     } else {
       coinReward = calculateCoinReward(currentMode, accuracyPct, false, false, false);
       battleMsg = accuracy >= 0.70 ? '📘 练习完成，已记录成绩。' : '📘 练习完成。';
@@ -2557,7 +2716,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentExpGain = exp;
     lastAccuracyPct = accuracyPct;
     lastCoinReward = coinReward || { baseCoins:0, penaltyCoins:0, bonusCoins:0, finalCoins:0, note:'' };
-    const quizIdForExp = currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey];
+    const quizIdForExp = currentQuizId_();
 
     if (exp > 0 && currentMode !== 'wrongbook') {
       fireGameAction({ action:'addExp', book, name:user, quizId:quizIdForExp, amount:String(exp), reason:currentMode, boostApplied: boostActive ? 'true' : 'false' });
@@ -2622,11 +2781,24 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (acc >= 0.50) exp += Math.max(10, Math.round(n * 0.8));
       return exp;
     }
+    if (mode === 'ultimate') {
+      let exp = Math.max(50, Math.round(n * 2.5));
+      if (acc >= 0.90) exp += Math.round(n * 5.0);
+      else if (acc >= 0.70) exp += Math.round(n * 2.5);
+      else if (acc >= 0.50) exp += Math.round(n * 1.0);
+      return exp;
+    }
     return Math.max(5, Math.round(n));
   }
 
   function modeLabel(m){
-    return m === 'practice' ? '普通练习' : (m === 'monster' ? '小怪挑战' : (m === 'wrongbook' ? '错题重练' : 'Boss挑战'));
+    return m === 'practice' ? '普通练习' : (m === 'monster' ? '小怪挑战' : (m === 'wrongbook' ? '错题重练' : (m === 'ultimate' ? '终极大 Boss' : 'Boss挑战')));
+  }
+
+  function currentQuizId_(){
+    if (currentMode === 'ultimate') return `终极大 Boss ${currentUltimateCount || qs.length}题`;
+    if (currentMode === 'boss') return `Bab ${currentBab} Boss`;
+    return currentRow ? (currentRow[chapterKey] || '') : '';
   }
 
 
@@ -2725,9 +2897,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitCode = createSubmissionCode_();
     const payload = {
       action:'submitToQueue',
-      submitId: `${book}|${displayUser || user}|${currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey]}|${submitCode}`,
+      submitId: `${book}|${displayUser || user}|${currentQuizId_()}|${submitCode}`,
       book,
-      quizId: currentMode === 'boss' ? `Bab ${currentBab} Boss` : currentRow[chapterKey],
+      quizId: currentQuizId_(),
       name: displayUser || user,
       score,
       correct:firstTryCorrect,
