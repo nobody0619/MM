@@ -8,7 +8,7 @@ Standard Form,radio,"Express 0.902 in standard form. / Ungkapkan 0.902 dalam ben
 Standard Form,radio,"Express 15 million in standard form. / Ungkapkan 15 juta dalam bentuk piawai.",1.5 x 10^6,1.5 x 10^7,1.5 x 10^8,15 x 10^6,B,
 Standard Form,radio,"Express 0.0000004 in standard form. / Ungkapkan 0.0000004 dalam bentuk piawai.",4 x 10^-6,4 x 10^-7,4 x 10^-8,0.4 x 10^-6,B,
 Standard Form,radio,"Express 2024 in standard form. / Ungkapkan 2024 dalam bentuk piawai.",2.024 x 10^3,2.024 x 10^4,20.24 x 10^2,2.024 x 10^-3,A,
-Standard Form,radio,"Express 0.060 in standard form. / Ungkapkan 0.060 dalam bentuk piawai.",6.0 x 10^-2,6 x 10^-2,6.0 x 10^2,6.0 x 10^-1,A,
+Standard Form,radio,"Express 0.060 in standard form. / Ungkapkan 0.060 dalam bentuk piawai.",6.0 x 10^-2,6 x 10^-3,6.0 x 10^2,6.0 x 10^-1,A,
 Convert Number,radio,"Convert 3.5 x 10^4 to a single number. / Tukarkan 3.5 x 10^4 kepada nombor tunggal.",3500,35000,350000,0.00035,B,
 Convert Number,radio,"Convert 7.2 x 10^-3 to a single number. / Tukarkan 7.2 x 10^-3 kepada nombor tunggal.",0.072,0.0072,0.00072,7200,B,
 Convert Number,radio,"Convert 6.0 x 10^5 to a single number. / Tukarkan 6.0 x 10^5 kepada nombor tunggal.",60000,600000,6000000,60500,B,
